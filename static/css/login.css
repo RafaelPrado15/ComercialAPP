@@ -1,0 +1,86 @@
+.bgImage {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    /* Ajuste conforme necessário */
+}
+
+.bgImage::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Update path to be relative to the css file or use absolute if needed, but in Flask it should be via static */
+    /* Ideally we use a class that sets the background image via inline style or a separate rule if we want to use url_for in template,
+       but for pure CSS file, we can't use url_for. 
+       I will set the background image in the HTML or assume the image is in ../img/ 
+       For now, I'll keep the reference's path but corrected for flask static structure: ../img/wallpaper_sphere.jpg 
+       if the css is in static/css, then .. goes to static, then /img/wallpaper_sphere.jpg matches. 
+    */
+    background-image: url('../src/img/image.png');
+    background-size: cover;
+    background-position: center;
+    filter: blur(3px);
+    scale: 1.01;
+    z-index: 1;
+}
+
+.bgImage::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(32, 32, 223, 0.3);
+    z-index: 2;
+}
+
+.img-logo {
+    width: 200px;
+}
+
+.page-full {
+    height: 100vh;
+    width: 100vw;
+}
+
+.container-custom {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+button[type="submit"] {
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.row {
+    --bs-gutter-x: 0rem !important;
+}

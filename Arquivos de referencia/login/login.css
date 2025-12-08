@@ -1,0 +1,74 @@
+.bgImage {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100vh; /* Ajuste conforme necessário */
+}
+
+.bgImage::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url(../static/wallpaper_sphere.jpg);
+    background-size: cover;
+    background-position: center;
+    filter: blur(3px);
+    scale: 1.01;
+    z-index: 1;
+}
+
+.bgImage::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(32, 32, 223, 0.3);
+    z-index: 2;
+}
+
+.img-logo{
+    width: 200px;
+}
+
+.page-full{
+    height: 100vh;
+    width: 100vw;
+}
+
+.container-custom {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+} 
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+button[type="submit"] {
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-top: 20px;
+}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Rastreio de Pedidos - Pradolux{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Rastreio de Pedidos</h2>
+        <p class="text-muted">Acompanhe o status dos seus pedidos</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('menu') }}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna Pendentes -->
+    <div class="col-md-4">
+        <div class="card h-100 bg-light border-0">
+            <div class="card-header bg-warning text-dark fw-bold text-center">
+                Pendentes ({{ kanban_data['Pendentes']|length }})
+            </div>
+            <div class="card-body overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Pendentes'] %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
+                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
+                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Em Fábrica -->
+    <div class="col-md-4">
+        <div class="card h-100 bg-light border-0">
+            <div class="card-header bg-primary text-white fw-bold text-center">
+                Em Fábrica ({{ kanban_data['Em Fábrica']|length }})
+            </div>
+            <div class="card-body overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Em Fábrica'] %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
+                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
+                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Faturado -->
+    <div class="col-md-4">
+        <div class="card h-100 bg-light border-0">
+            <div class="card-header bg-success text-white fw-bold text-center">
+                Faturado ({{ kanban_data['Faturado']|length }})
+            </div>
+            <div class="card-body overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Faturado'] %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
+                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
+                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
+                        <span class="badge bg-success float-end">Concluído</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

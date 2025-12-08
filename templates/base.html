@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pradolux Portal{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-pradolux mb-4 p-3">
+        <div class="container">
+            <!-- Left Side: Toggler & Portal Link -->
+            <div class="d-flex align-items-center" style="width: 30%;">
+                <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="nav-link text-white fw-bold d-none d-md-block" href="{{ url_for('menu') }}">Portal</a>
+            </div>
+
+            <!-- Center: Logo -->
+            <div class="text-center" style="width: 40%;">
+                <a class="navbar-brand m-0" href="{{ url_for('menu') }}">
+                    <img src="{{ url_for('static', filename='src/img/logo pradolux.png') }}" alt="Pradolux"
+                        style="height: 45px; width: auto;" class="d-inline-block">
+                </a>
+            </div>
+
+            <!-- Right Side: User Links -->
+            <div class="d-flex justify-content-end align-items-center" style="width: 30%;">
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        {% if current_user.is_authenticated %}
+
+                        <!-- Company Switcher -->
+                        {% if user_companies and user_companies|length > 1 %}
+                        <li class="nav-item dropdown me-2">
+                            <a class="nav-link dropdown-toggle text-white border rounded px-2 d-flex align-items-center"
+                                href="#" id="companyDropdown" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" style="border-color: rgba(255,255,255,0.5) !important;">
+                                <i class="bi bi-building me-1"></i> <span class="d-none d-lg-inline">{{
+                                    active_company.name[:15] + '...' if active_company and active_company.name|length >
+                                    15 else (active_company.name if active_company else 'Empresa') }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="companyDropdown"
+                                style="min-width: 300px;">
+                                <li>
+                                    <h6 class="dropdown-header">Selecionar Empresa</h6>
+                                </li>
+                                <li>
+                                    <div class="px-3 py-2">
+                                        <!-- stopPropagation prevents dropdown close on click -->
+                                        <input type="text" class="form-control form-control-sm" id="companySearchInput"
+                                            placeholder="Pesquisar..." onkeyup="filterCompanies()"
+                                            onclick="event.stopPropagation()">
+                                    </div>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <div id="companyList">
+                                    {% for company in user_companies %}
+                                    <li>
+                                        <a class="dropdown-item company-item {% if active_company and active_company.id == company.id %}active{% endif %}"
+                                            href="{{ url_for('set_company', company_id=company.id) }}">
+                                            <strong>{{ company.name }}</strong> <br><small class="text-muted">{{
+                                                company.cod_cliente }}</small>
+                                            <!-- Hidden searchable text -->
+                                            <span class="d-none search-data">{{ company.name }} {{ company.cod_cliente
+                                                }}</span>
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </div>
+                                <li id="noResults" class="px-3 text-muted small d-none">Nenhuma empresa encontrada.</li>
+                            </ul>
+                        </li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            <span class="nav-link text-white d-none d-lg-block">Olá, {{ current_user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light ms-2 px-3 border-0"
+                                href="{{ url_for('logout') }}">Sair</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    <script>
+        function filterCompanies() {
+            var input, filter, list, items, a, i, txtValue, noRes;
+            input = document.getElementById("companySearchInput");
+            filter = input.value.toUpperCase();
+            list = document.getElementById("companyList");
+            items = list.getElementsByTagName("li");
+            noRes = document.getElementById("noResults");
+            var visibleCount = 0;
+
+            for (i = 0; i < items.length; i++) {
+                a = items[i].getElementsByTagName("a")[0];
+                var searchData = a.querySelector('.search-data');
+                txtValue = searchData ? searchData.textContent || searchData.innerText : a.textContent || a.innerText;
+
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                    visibleCount++;
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+
+            if (visibleCount === 0) {
+                noRes.classList.remove('d-none');
+            } else {
+                noRes.classList.add('d-none');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedidos - Pradolux{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+    <div class="mb-3 mb-md-0">
+        <h2 class="fw-bold text-pradolux mb-0">Meus Pedidos</h2>
+        <small class="text-muted">Consulte o histórico dos seus pedidos</small>
+    </div>
+
+    <!-- Search Form -->
+    <form class="d-flex" method="get" action="{{ url_for('pedidos') }}">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input class="form-control border-start-0" type="search" name="search" placeholder="Pesquisar pedido..."
+                value="{{ search }}" aria-label="Search">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+        </div>
+    </form>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Pedido</th>
+                    <th>Emissão</th>
+                    <th>Status</th>
+                    <th>Nota Fiscal</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if orders %}
+                {% for order in orders %}
+                <tr>
+                    <td class="fw-bold">#{{ order['D2_PEDIDO'] }}</td>
+                    <td>{{ order['F2_EMISSAO'] }}</td>
+                    <td>
+                        {% if order['StatusPedido'] == 'Faturado' %}
+                        <span class="badge bg-success">Faturado</span>
+                        {% elif order['StatusPedido'] == 'Em Fábrica' %}
+                        <span class="badge bg-primary">Em Fábrica</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ order['StatusPedido'] }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order['NUM_NOTA'] if order['NUM_NOTA'] else '-' }}</td>
+                    <td>R$ {{ order['F2_VALBRUT'] }}</td>
+                    <td>
+                        <a href="{{ url_for('pedido_detail', id=order['D2_PEDIDO']) }}"
+                            class="btn btn-sm btn-outline-primary">
+                            Detalhes
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">Nenhum pedido encontrado.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('pedidos', page=page-1, search=search) }}">Anterior</a>
+        </li>
+
+        {% for p in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('pedidos', page=p, search=search) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('pedidos', page=page+1, search=search) }}">Próximo</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

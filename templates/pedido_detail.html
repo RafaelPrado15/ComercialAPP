@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Pedido - Pradolux{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Detalhes do Pedido #{{ pedido.D2_PEDIDO }}</h2>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('pedidos') }}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-bold">Informações Gerais</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4"><strong>Cliente:</strong> {{ pedido.A1_NOME }}</div>
+            <div class="col-md-4"><strong>Vendedor:</strong> {{ pedido.A3_NOME }}</div>
+            <div class="col-md-4"><strong>Status:</strong> {{ pedido.StatusPedido }}</div>
+            <div class="col-md-4 mt-2"><strong>Nota Fiscal:</strong> {{ pedido.NUM_NOTA }}</div>
+            <div class="col-md-4 mt-2"><strong>Emissão:</strong> {{ pedido.F2_EMISSAO }}</div>
+            <div class="col-md-4 mt-2"><strong>Valor Bruto:</strong> R$ {{ pedido.F2_VALBRUT }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- If we have line items, display them here. 
+     The query is at Header/Nota level mostly (F2_), but SD2APP is joined.
+     If the query returns multiple rows because of multiple items in SD2010, we'd list them.
+     But the query does DISTINCT(D2_PEDIDO) in the subquery SD2APP?
+     Wait, the subquery SELECT DISTINCT(D2_PEDIDO)... might mean we lost item level detail if not careful.
+     Actually, SD2APP.D2_PEDIDO is distinct per order? 
+     "SELECT DISTINCT(D2_PEDIDO) ... FROM SD2010"
+     If SD2010 is items, selecting distinct pedido collapses items.
+     So the provided query essentially retrieves ORDER HEADERS (via Nota Fiscal F2).
+     So we might NOT have item details in this result set.
+     I will show what is available.
+-->
+{% endblock %}

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pradolux AR</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="./index.js"></script>
+    <script src="https://unpkg.com/phosphor-icons"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PX01MT1YMK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-PX01MT1YMK');
+    </script>
+</head>
+
+
+<body>
+
+    <div id="menuLateral" class="menu-lateral">
+        <button id="closeBtn" class="close-btn" onclick="toggleMenuLateral()">X</button>
+        <img src="./src/img/logoPradolux.png" alt="logo Pradolux" style="width: 45px; margin: 0px 0px 12px 32px;">
+        <ul>
+            <li><a class="item-1" href="https://pradolux.com.br/a-pradolux/">Institucional</a></li><br>
+            <li><a class="item-2" href="https://pradolux.com.br/produtos/">Produtos</a></li><br>
+            <li><a class="item-3" href="https://pradolux.com.br/contact/">Contato</a></li><br>
+            <li><a class="item-4" href="https://pradolux.com.br/noticias/">Blog</a></li><br>
+        </ul>
+    </div>
+
+    <!-- <header> -->
+    <div class="container">
+        <div class="coluna1">
+            <!-- <h1>Título do Site</h1> -->
+            <i id="iconeLista" class="ph ph-list" onclick="toggleMenuLateral()"></i>
+        </div>
+        <div class="coluna2">
+            <!-- <div class="logo"> -->
+            <img src="./src/img/NovoLogoPradolux-horizontal-branca.png" alt="Logo Pradolux" style="margin-bottom: 4px;">
+            <!-- </div> -->
+        </div>
+        <div class="coluna3">
+            <div class="containerL">
+                <!-- <div class="bandeiras">
+                    <a href="#" language='ingles'><img src="./src/img/united-states-icon.png"></a>
+                    <a href="#" language='portugues' class="active"><img src="./src/img/brazil-icon.png"></a>
+                    <a href="#" language='espanhol'><img src="./src/img/spain-icon.png"></a>
+                </div> -->
+                <!-- <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M680-80q-50 0-85-35t-35-85q0-6 3-28L282-392q-16 15-37 23.5t-45 8.5q-50 0-85-35t-35-85q0-50 35-85t85-35q24 0 45 8.5t37 23.5l281-164q-2-7-2.5-13.5T560-760q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-24 0-45-8.5T598-672L317-508q2 7 2.5 13.5t.5 14.5q0 8-.5 14.5T317-452l281 164q16-15 37-23.5t45-8.5q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T720-200q0-17-11.5-28.5T680-240q-17 0-28.5 11.5T640-200q0 17 11.5 28.5T680-160ZM200-440q17 0 28.5-11.5T240-480q0-17-11.5-28.5T200-520q-17 0-28.5 11.5T160-480q0 17 11.5 28.5T200-440Zm480-280q17 0 28.5-11.5T720-760q0-17-11.5-28.5T680-800q-17 0-28.5 11.5T640-760q0 17 11.5 28.5T680-720Zm0 520ZM200-480Zm480-280Z"/></svg> -->
+                <!-- <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg> -->
+                <div class="button-wrapper"> <!-- Novo wrapper para o botão -->
+                    <!-- <button class="buttonL" onclick="toggleLanguages()" style="    margin-bottom: 9px;">Tradução</button> -->
+                    <img src="./src/img/icons/translateIcon.svg" class="buttonL" onclick="toggleLanguages()" style="margin-bottom: 9px;" alt="Ícone de tradução">
+
+                    <div id="languageOptions" class="language-options" >
+                        <!-- <div class="bandeiras">
+                            <a href="#" language='ingles'></a>
+                            <a href="#" language='portugues' class="active"></a>
+                            <a href="#" language='espanhol'></a>
+                        </div> -->
+                        <!-- <a href="#" language='ingles'><img src="./src/img/united-states-icon.png"></a> -->
+                        <button onclick="changeLanguage('ingles')"><img class="teste" src="./src/img/united-states-icon.png"> Inglês</button>
+                        <button onclick="changeLanguage('portugues')" class="active"><img class="teste" src="./src/img/brazil-icon.png"> Português</button>
+                        <button onclick="changeLanguage('espanhol')"><img class="teste" src="./src/img/spain-icon.png"> Espanhol</button>
+
+                    </div>
+                </div>
+                <div class="button-wrapper"> <!-- Novo wrapper para o botão -->
+                    <!-- <button class="buttonL" onclick="toggleLanguages()" style="    margin-bottom: 9px;">Tradução</button> -->
+                    <img src="./src/img/icons/shareIcon.svg" class="buttonL" onclick="share()" style="margin-bottom: 9px;" alt="Ícone de tradução">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- </header> -->
+
+    <div class="input-wrapper">
+        <!-- <label for="filter" class="sr-only">Buscar produtos</label> -->
+        <input id="filter" type="text" placeholder="Buscar produtos">
+        <i class="ph-magnifying-glass"></i>
+    </div>
+
+    <div class="wrapper">
+        <!-- Card 1 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/2220.html';">
+            <img src="./src/img/img-menu/PL2220.png " 
+                alt="PL2220 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title1" >PL2220</h2>
+                <p class="card__description card__description1" >Lanterna traseira Modulus</p>
+                <b class="description description1" >Com ponteira de acabamento e 78 LEDs bivolt</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/2220.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 2 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/1452.html';">
+            <img src="./src/img/img-menu/PL1452.png"
+                alt="PL1452 - Lanterna" class="card__img" style="width: 80% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title2" class="card__title2">PL1452</h2>
+                <p class="card__description card__description2">Lanterna Traseira Triplo X PLUS LED</p>
+                <b class="description description2" style="text-align: justify;">Com 66 LEDs e triângulo retrorefletor</b>
+                <br> 
+                <button class="card__btn" onclick="window.location.href='./produto/1452.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 3 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/2702.html';">
+            <img src="./src/img/img-menu/pl2702.png"
+                alt="PL2702 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title3" >PL2702</h2>
+                <p class="card__description card__description3" >Suporte traseiro Triplo X LED</p>
+                <b class="description description3" >Com triângulo retrorrefletor</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/2702.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 4 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/2700.html';">
+            <img src="./src/img/img-menu/pl2700.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title4" >PL2700</h2>
+                <p class="card__description card__description4" >Suporte traseiro Phantom LED</p>
+                <b class="description description4" >Com 42 LEDs e triângulo retrorrefletor</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/2700.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 5 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/886.html';">
+            <img src="./src/img/img-menu/pl0886.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 80% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title5" >PL0886</h2>
+                <p class="card__description card__description5" >Lanterna Traseira Phantom LED</p>
+                <b class="description description5" >Com 42 LEDs</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/886.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 6 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/656.html';">
+            <img src="./src/img/img-menu/PL0656.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 73% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title6" >PL0656</h2>
+                <p class="card__description card__description6" >Lanterna lateral exclusiva</p>
+                <b class="description description6" >Com conector 2 vias, MODELO STANDARD</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/656.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 7 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/658.html';">
+            <img src="./src/img/img-menu/PL0658.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 73% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title7" >PL0658</h2>
+                <p class="card__description card__description7" >Lanterna lateral exclusiva</p>
+                <b class="description description7" >Com conector 2 vias, MODELO ECO</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/658.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 8 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/660.html';">
+            <img src="./src/img/img-menu/PL0660.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 73% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title8" >PL0660</h2>
+                <p class="card__description card__description8" >Lanterna lateral exclusiva</p>
+                <b class="description description8" >Com conector 2 vias, MODELO PLUS</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/660.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 9 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/640.html';">
+            <img src="./src/img/img-menu/PL0640.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title9" >PL0640</h2>
+                <p class="card__description card__description9" >Lanterna lateral slim</p>
+                <b class="description description9" >Com guia de luz LED</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/640.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 10 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/642.html';">
+            <img src="./src/img/img-menu/PL0642.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title10" >PL0642</h2>
+                <p class="card__description card__description10" >Lanterna lateral slim</p>
+                <b class="description description10" >Com guia de luz LED e suporte</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/642.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 11 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/670.html';">
+            <img src="./src/img/img-menu/PL0670.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title11" >PL0670</h2>
+                <p class="card__description card__description11" >Lanterna Lateral LED</p>
+                <b class="description description11" >Com cabos para conexão</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/670.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 12 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/672.html';">
+            <img src="./src/img/img-menu/PL0672.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title12" >PL0672</h2>
+                <p class="card__description card__description12" >Lanterna lateral LED com suporte</p>
+                <b class="description description12" >Com suporte e cabos</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/672.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 13 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7010.html';">
+            <img src="./src/img/img-menu/PL7010.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title13" >PL7010</h2>
+                <p class="card__description card__description13" >Farol duplo horizontal</p>
+                <b class="description description13" >Com foco duplo horizontal com soquete amarelo</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7010.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 14 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7026.html';">
+            <img src="./src/img/img-menu/PL7026.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 76% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title14" >PL7026</h2>
+                <p class="card__description card__description14" >Farol duplo</p>
+                <b class="description description14" >Com adaptador para soquete cachimbo</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7026.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 15 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7028.html';">
+            <img src="./src/img/img-menu/pl7028.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title15" >PL7028</h2>
+                <p class="card__description card__description15" >Farol foco duplo</p>
+                <b class="description description15" >Farol foco duplo aplicação MB Atron</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7028.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 16 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7000.html';">
+            <img src="./src/img/img-menu/pl7000.png"
+                alt="PL17000 - Lanterna" class="card__img2 img7000">
+            <div class="card__body">
+                <h2 class="card__title card__title16" >PL7000</h2>
+                <p class="card__description card__description16" >Farol principal</p>
+                <b class="description description16" >com foco simples VW Constellation</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7000.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 17 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7040.html';">
+            <img src="./src/img/img-menu/pl7040.png"
+                alt="PL1800 - Lanterna" class="card__img" style="width: 73% !important;">
+            <div class="card__body">
+                <h2 class="card__title card__title17" >PL7040</h2>
+                <p class="card__description card__description17" >Farol principal</p>
+                <b class="description description17" >com luz de posição VW Delivery</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7040.html';">Visualizar produto</button>
+            </div>
+        </div>
+        <!-- Card 18 --> <!-- <Google OK> -->
+        <div class="card" onclick="window.location.href='./produto/7042.html';">
+            <img src="./src/img/img-menu/PL7042.png"
+                alt="PL1800 - Lanterna" class="card__img">
+            <div class="card__body">
+                <h2 class="card__title card__title18" >PL7042</h2>
+                <p class="card__description card__description18" >Farol Auxiliar</p>
+                <b class="description description18" >Farol Auxiliar Delivery</b>
+                <br>
+                <button class="card__btn"
+                    onclick="window.location.href='./produto/7042.html';">Visualizar produto</button>
+            </div>
+        </div>
+
+        <!-- Adicione mais cartões conforme necessário -->
+
+    </div>
+
+    <script>
+    function changeLanguage(language) {
+        const activeElement = document.querySelector('.bandeiras .active');
+        if (activeElement) {
+            activeElement.classList.remove('active');
+        }
+
+        const buttons = document.querySelectorAll('.bandeiras button');
+        buttons.forEach(button => {
+            if (button.textContent.toLowerCase().includes(language)) {
+                button.classList.add('active');
+            }
+        });
+
+        localStorage.setItem('language', language);
+        translationText(language);
+    }
+
+    function toggleLanguages() {
+        var languageOptions = document.getElementById('languageOptions');
+        if (languageOptions.style.display === 'block') {
+            languageOptions.style.display = 'none';
+        } else {
+            languageOptions.style.display = 'block';
+        }
+    }
+
+    function share() {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title, // Título da página
+                text: 'Confira esta página!', // Texto adicional
+                url: window.location.href // URL da página atual
+            }).then(() => {
+                console.log('Compartilhamento bem-sucedido!');
+            }).catch((error) => {
+                console.error('Erro no compartilhamento:', error);
+            });
+        } else {
+            alert('O compartilhamento não é suportado neste navegador.');
+        }
+    }
+
+
+// Restante do seu código...
+
+
+        function translationText (language) {
+            // language = "ingles"
+            for (let i = 0; i < butv.length; i++) {
+                    butv[i].textContent = data[language].button;
+                }
+
+                inputEl.placeholder = data[language].input;
+                translationEl.textContent = data[language].translation;
+                //menu
+                item1.textContent = data[language].menu.col1;
+                item2.textContent = data[language].menu.col2;
+                item3.textContent = data[language].menu.col3;
+                item4.textContent = data[language].menu.col4;
+                // item5.textContent = data[language].menu.col5;
+
+                // translation
+                titleEl.textContent = data[language].produto1.title;
+                descrEl.textContent = data[language].produto1.subtitle;
+                descrip.textContent  = data[language].produto1.description;
+                //card 2
+                titleEl2.textContent = data[language].produto2.title;
+                descrEl2.textContent = data[language].produto2.subtitle;
+                descrip2.textContent = data[language].produto2.subtitle;
+                //card 3
+                titleEl3.textContent = data[language].produto3.title;
+                descrEl3.textContent = data[language].produto3.subtitle;
+                descrip3.textContent  = data[language].produto3.description;
+                //card 4
+                titleEl4.textContent = data[language].produto4.title;
+                descrEl4.textContent = data[language].produto4.subtitle;
+                descrip4.textContent  = data[language].produto4.description;
+                //card 5
+                titleEl5.textContent = data[language].produto5.title;
+                descrEl5.textContent = data[language].produto5.subtitle;
+                descrip5.textContent  = data[language].produto5.description;
+                //card 6
+                titleEl6.textContent = data[language].produto6.title;
+                descrEl6.textContent = data[language].produto6.subtitle;
+                descrip6.textContent  = data[language].produto6.description;
+                //card 7
+                titleEl7.textContent = data[language].produto7.title;
+                descrEl7.textContent = data[language].produto7.subtitle;
+                descrip7.textContent  = data[language].produto7.description;
+                //card 8
+                titleEl8.textContent = data[language].produto8.title;
+                descrEl8.textContent = data[language].produto8.subtitle;
+                descrip8.textContent  = data[language].produto8.description;
+                //card 9
+                titleEl9.textContent = data[language].produto9.title;
+                descrEl9.textContent = data[language].produto9.subtitle;
+                descrip9.textContent  = data[language].produto9.description;
+                //card 10
+                titleEl10.textContent = data[language].produto10.title;
+                descrEl10.textContent = data[language].produto10.subtitle;
+                descrip10.textContent  = data[language].produto10.description;
+                //card 11
+                titleEl11.textContent = data[language].produto11.title;
+                descrEl11.textContent = data[language].produto11.subtitle;
+                descrip11.textContent  = data[language].produto11.description;
+                //card 12
+                titleEl12.textContent = data[language].produto12.title;
+                descrEl12.textContent = data[language].produto12.subtitle;
+                descrip12.textContent  = data[language].produto12.description;
+                //card 13
+                titleEl13.textContent = data[language].produto13.title;
+                descrEl13.textContent = data[language].produto13.subtitle;
+                descrip13.textContent  = data[language].produto13.description;
+                //card 14
+                titleEl14.textContent = data[language].produto14.title;
+                descrEl14.textContent = data[language].produto14.subtitle;
+                descrip14.textContent  = data[language].produto14.description;
+                //card 15
+                titleEl15.textContent = data[language].produto15.title;
+                descrEl15.textContent = data[language].produto15.subtitle;
+                descrip15.textContent  = data[language].produto15.description;
+                //card 16
+                titleEl16.textContent = data[language].produto16.title;
+                descrEl16.textContent = data[language].produto16.subtitle;
+                descrip16.textContent  = data[language].produto16.description;
+                //card 17
+                titleEl17.textContent = data[language].produto17.title;
+                descrEl17.textContent = data[language].produto17.subtitle;
+                descrip17.textContent  = data[language].produto17.description;
+                //card 18
+                titleEl18.textContent = data[language].produto18.title;
+                descrEl18.textContent = data[language].produto18.subtitle;
+                descrip18.textContent  = data[language].produto18.description;
+        }
+
+        // Verifica se há um idioma definido e exibe a saudação correspondente
+
+        window.onload = function() {
+            if (localStorage.getItem('language')) {
+                var language = localStorage.getItem('language');
+                translationText(language);
+            } 
+            // else {
+            //     localStorage.setItem('language' , 'portugues');
+            // }
+        };
+
+
+        const langEl = document.querySelector('.bandeiras');
+        const links = document.querySelectorAll('a');
+        const butv = document.querySelectorAll('.card__btn');
+        const inputEl = document.querySelector('input');
+        const translationEl = document.querySelector('.buttonL')
+        //menu
+        const item1 = document.querySelector(".item-1")
+        const item2 = document.querySelector(".item-2")
+        const item3 = document.querySelector(".item-3")
+        const item4 = document.querySelector(".item-4")
+        // const item5 = document.querySelector(".item-5")
+
+        //card 1
+        const titleEl = document.querySelector('.card__title1');
+        const descrEl = document.querySelector('.card__description1');
+        const descrip = document.querySelector('.description1');
+        //card 2
+        const titleEl2 = document.querySelector('.card__title2');
+        const descrEl2 = document.querySelector('.card__description2');
+        const descrip2 = document.querySelector('.description2');
+        //card 3
+        const titleEl3 = document.querySelector('.card__title3');
+        const descrEl3 = document.querySelector('.card__description3');
+        const descrip3 = document.querySelector('.description3');
+        //card 4
+        const titleEl4 = document.querySelector('.card__title4');
+        const descrEl4 = document.querySelector('.card__description4');
+        const descrip4 = document.querySelector('.description4');
+        //card 5
+        const titleEl5 = document.querySelector('.card__title5');
+        const descrEl5 = document.querySelector('.card__description5');
+        const descrip5 = document.querySelector('.description5');
+        //card 6
+        const titleEl6 = document.querySelector('.card__title6');
+        const descrEl6 = document.querySelector('.card__description6');
+        const descrip6 = document.querySelector('.description6');
+        //card 7
+        const titleEl7 = document.querySelector('.card__title7');
+        const descrEl7 = document.querySelector('.card__description7');
+        const descrip7 = document.querySelector('.description7');
+        //card 8
+        const titleEl8 = document.querySelector('.card__title8');
+        const descrEl8 = document.querySelector('.card__description8');
+        const descrip8 = document.querySelector('.description8');
+        //card 9
+        const titleEl9 = document.querySelector('.card__title9');
+        const descrEl9 = document.querySelector('.card__description9');
+        const descrip9 = document.querySelector('.description9');
+        //card 10
+        const titleEl10 = document.querySelector('.card__title10');
+        const descrEl10 = document.querySelector('.card__description10');
+        const descrip10 = document.querySelector('.description10');
+        //card 11
+        const titleEl11 = document.querySelector('.card__title11');
+        const descrEl11 = document.querySelector('.card__description11');
+        const descrip11 = document.querySelector('.description11');
+        //card 12
+        const titleEl12 = document.querySelector('.card__title12');
+        const descrEl12 = document.querySelector('.card__description12');
+        const descrip12 = document.querySelector('.description12');
+        //card 13
+        const titleEl13 = document.querySelector('.card__title13');
+        const descrEl13 = document.querySelector('.card__description13');
+        const descrip13 = document.querySelector('.description13');
+        //card 14
+        const titleEl14 = document.querySelector('.card__title14');
+        const descrEl14 = document.querySelector('.card__description14');
+        const descrip14 = document.querySelector('.description14');
+        //card 15
+        const titleEl15 = document.querySelector('.card__title15');
+        const descrEl15 = document.querySelector('.card__description15');
+        const descrip15 = document.querySelector('.description15');
+        //card 16
+        const titleEl16 = document.querySelector('.card__title16');
+        const descrEl16 = document.querySelector('.card__description16');
+        const descrip16 = document.querySelector('.description16');
+        //card 17
+        const titleEl17 = document.querySelector('.card__title17');
+        const descrEl17 = document.querySelector('.card__description17');
+        const descrip17 = document.querySelector('.description17');
+        //card 18
+        const titleEl18 = document.querySelector('.card__title18');
+        const descrEl18 = document.querySelector('.card__description18');
+        const descrip18 = document.querySelector('.description18');
+
+        // links.forEach(el => {
+        //     el.addEventListener('click', () => {
+        //         // Verifica se existe algum elemento com a classe 'active'
+        //         const activeElement = langEl.querySelector('.active');
+        //         if (activeElement) {
+        //             activeElement.classList.remove('active');
+        //         }
+                
+        //         el.classList.add('active');
+
+        //         const attr = el.getAttribute('language');
+        //         localStorage.setItem('language', attr);
+        //         translationText(attr);
+        //     });
+        // });
+
+
+    </script>
+
+    
+
+    <script>//-----Teste select------
+        function toggleLanguages() {
+            var languageOptions = document.getElementById('languageOptions');
+            if (languageOptions.style.display === 'block') {
+                languageOptions.style.display = 'none';
+            } else {
+                languageOptions.style.display = 'block';
+            }
+        }
+
+    </script>
+
+    <script>//-------------Pesquisa---------------
+        // get filter element
+        const filterElement = document.querySelector('input')
+        // get cards elements
+        const cards = document.querySelectorAll('.card')
+        // add input event for the filter element
+        filterElement.addEventListener('input', filterCards)
+    
+        // filter function
+        function filterCards() {
+    
+            // if the filter is not empty
+            if (filterElement.value != '') {
+                // transform filter text to lower case
+                let filterText = filterElement.value.toLowerCase()
+    
+                // for each card of cards
+                for (let card of cards) {
+                    // get card title, p description and b description
+                    let title = card.querySelector('h2').textContent.toLocaleLowerCase()
+                    let descriptionP = card.querySelector('.card__description').textContent.toLocaleLowerCase()
+                    let descriptionB = card.querySelector('.description').textContent.toLocaleLowerCase()
+    
+                    // check if the filter text is in title or descriptions
+                    if (!title.includes(filterText) && !descriptionP.includes(filterText) && !descriptionB.includes(filterText)) {
+                        // hide the card element
+                        card.style.display = "none"
+                    } else {
+                        // unhide the card element
+                        card.style.display = "block"
+                    }
+                }
+            } else {
+                // if filter is empty, show all cards
+                for (let card of cards) {
+                    card.style.display = "block"
+                }
+            }
+        }
+    </script>
+    
+
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Nota - Pradolux{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Nota Fiscal: {{ nota.NUM_NOTA }}</h2>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('notas') }}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-bold">Informações da Fatura</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-2"><strong>Chave de Acesso:</strong> {{ nota.F2_CHVNFE }}</div>
+            <div class="col-md-6 mb-2"><strong>Emissão:</strong> {{ nota.F2_EMISSAO }}</div>
+            <div class="col-md-6 mb-2"><strong>Cliente:</strong> {{ nota.A1_NOME }}</div>
+            <div class="col-md-6 mb-2"><strong>Valor Total:</strong> R$ {{ nota.F2_VALBRUT }}</div>
+            <div class="col-md-6 mb-2"><strong>Pedido Origem:</strong> {{ nota.D2_PEDIDO }}</div>
+            <div class="col-md-6 mb-2">
+                <strong>Consulta NFe:</strong>
+                <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&nfe={{ nota.F2_CHVNFE }}"
+                    target="_blank" class="text-decoration-none">
+                    <i class="bi bi-box-arrow-up-right"></i> Consultar na Fazenda
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

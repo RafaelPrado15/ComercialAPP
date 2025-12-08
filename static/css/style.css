@@ -1,0 +1,41 @@
+/* Global Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+    cursor: pointer;
+    border: none;
+    /* Cleaner look */
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+}
+
+.navbar-brand img {
+    height: 30px;
+    width: auto;
+}
+
+/* Pradolux Theme Overrides */
+.navbar-pradolux {
+    background-color: #26378D !important;
+    color: white;
+}
+
+.text-pradolux {
+    color: #26378D !important;
+}
+
+.btn-outline-pradolux {
+    color: #26378D;
+    border-color: #26378D;
+}
+
+.btn-outline-pradolux:hover {
+    background-color: #26378D;
+    color: white;
+}
