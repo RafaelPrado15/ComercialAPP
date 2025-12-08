@@ -378,6 +378,73 @@ def nota_detail(id):
     return render_template('nota_detail.html', nota=data[0] if data else None, items=data)
 
 
+@app.route('/chat')
+@login_required
+def chat():
+    return render_template('chat.html')
+
+@app.route('/api/chat/send', methods=['POST'])
+@login_required
+def chat_send():
+    import requests
+    data = request.json
+    message = data.get('message')
+    
+    if not message:
+         return jsonify({'error': 'No message provided'}), 400
+         
+    # Generate or retrieve session ID (simplification: user ID)
+    session_id = str(current_user.id)
+    
+    # N8N Webhook URL (Ideally from Config)
+    # Using the IP user provided recently, but with the path from the JSON file
+    # Webhook ID: 3d061473-a4b8-4ee9-9796-848e05a5596e
+    # Path: chat
+    n8n_url = "http://localhost:5678/webhook/3d061473-a4b8-4ee9-9796-848e05a5596e/chat"
+    # Or if user is running n8n in docker/LAN:
+    # n8n_url = "http://192.168.117.53:5678/webhook/3d061473-a4b8-4ee9-9796-848e05a5596e/chat" 
+    # I will use a fallback or try the localhost first. Since the user context showed failure on localhost:5000 accessing 192..., 
+    # it implies the server runs locally.
+    # Let's use a Config variable in a real app, but for now hardcode with comment.
+    
+    n8n_url = Config.N8N_WEBHOOK_URL if hasattr(Config, 'N8N_WEBHOOK_URL') else "http://localhost:5678/webhook/3d061473-a4b8-4ee9-9796-848e05a5596e/chat"
+    
+    try:
+        # Payload for n8n Webhook
+        payload = {
+            "chatInput": message,
+            "sessionId": session_id
+        }
+        
+        print(f"DEBUG: Sending POST to {n8n_url}")
+        print(f"DEBUG: Payload: {payload}")
+        
+        response = requests.post(n8n_url, json=payload, timeout=30)
+        
+        print(f"DEBUG: Status Code: {response.status_code}")
+        print(f"DEBUG: Response Text: {response.text}")
+        
+        if response.status_code == 200:
+            # We expect n8n to return JSON. Our script ensured 'Set' node output has 'text'
+            # If n8n returns a list of items, we take the first.
+            try:
+                res_data = response.json()
+                if isinstance(res_data, list) and len(res_data) > 0:
+                     return jsonify(res_data[0]) # Start with first item
+                elif isinstance(res_data, dict):
+                     return jsonify(res_data)
+                else:
+                     return jsonify({'text': str(response.text)})
+            except ValueError:
+                 return jsonify({'text': response.text}) # Plain text response?
+        else:
+            print(f"ERROR: n8n returned {response.status_code}")
+            return jsonify({'error': f"N8N Error: {response.status_code}", 'details': response.text}), 502
+            
+    except Exception as e:
+        print(f"EXCEPTION: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     # app.run(debug=True)
     app.run(debug=True, host='0.0.0.0', port=5000)

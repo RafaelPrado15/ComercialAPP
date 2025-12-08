@@ -19,3 +19,8 @@ class Config:
     SQL_SERVER_DB = os.environ.get('SQL_SERVER_DB') or 'Totvs12'
     # ODBC Driver 17 is standard for recent setups
     SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+    
+    # N8N Configuration
+    # Webhook ID from 'Faq Inteligente.json': 3d061473-a4b8-4ee9-9796-848e05a5596e
+    # User provided test URL
+    N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL') or 'http://192.168.117.53:5678/webhook-test/chat'

@@ -1,0 +1,768 @@
+{
+  "name": "Faq Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "={{ $json.reply }}"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -112
+      ],
+      "id": "2e378a8b-e858-46e8-8ce8-cdc46ce940b8",
+      "name": "Respond to Chat",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.chatInput }}",
+                    "rightValue": "1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "8e53ec69-c604-4417-be80-462eec1eb27b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "455e10b8-20f6-42ed-ae81-e56ff1e9e1ba",
+                    "leftValue": "={{ $json.chatInput }}",
+                    "rightValue": "2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d4818a23-ca11-4957-8086-e42ee334218a",
+                    "leftValue": "={{ $json.chatInput }}",
+                    "rightValue": "3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        272,
+        128
+      ],
+      "id": "128a4278-cb34-4c7c-9035-526b90009cb5",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        128
+      ],
+      "id": "d3ff3dc8-eea0-443c-a6d0-3906448f0874",
+      "name": "Webhook",
+      "webhookId": "3d061473-a4b8-4ee9-9796-848e05a5596e"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      reply: \"359999-9999\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        128
+      ],
+      "id": "4d9b5247-fc6e-497a-a362-abe3fb92b26c",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @notaFiscal VARCHAR(15) = ''\nDECLARE @codCliente VARCHAR(6) = '' \nDECLARE @codRepres VARCHAR(6) = '999999' \nDECLARE @pedido VARCHAR(10) = ''\nDECLARE @dataMinima VARCHAR(8) = '20250101';\n\nSELECT TOP 6\n\tF2_DOC AS NUM_NOTA,\n\tF2_VEND1,\n\tA3_NOME,\n\tF2_EMISSAO,\n\tF2_CLIENTE,\n\tA1_NOME,\n\tF2_VALBRUT,\n\tSD2APP.D2_PEDIDO,\n\tF2_CHVNFE\nFROM SF2010 AS SF2 WITH(NOLOCK)\nINNER JOIN SA3010 AS SA3 WITH(NOLOCK)\n\tON SA3.A3_COD = SF2.F2_VEND1\n\tAND SA3.D_E_L_E_T_ = ''\n\tAND SA3.A3_MSBLQL <> '1'\nINNER JOIN SA1010 AS SA1 WITH(NOLOCK)\n\tON SA1.A1_COD = SF2.F2_CLIENTE\n\tAND SA1.D_E_L_E_T_ = ''\n\tAND SA1.A1_MSBLQL <> '1'\nINNER JOIN (\n\tSELECT\n\tDISTINCT(D2_PEDIDO) AS D2_PEDIDO,\n\tD2_DOC,\n\tD2_LOJA,\n\tD2_SERIE,\n\tD2_CLIENTE\n\tFROM SD2010 AS SD2 WITH(NOLOCK)\n\tWHERE SD2.D_E_L_E_T_ = ''\n\tAND SD2.D2_PEDIDO <> ''\n\t) AS SD2APP\n\tON SD2APP.D2_DOC =  SF2.F2_DOC\n\tAND SD2APP.D2_SERIE = SF2.F2_SERIE\n\tAND SD2APP.D2_LOJA = SF2.F2_LOJA\n\tAND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE\nWHERE SF2.D_E_L_E_T_ = ''\n\tAND (@codRepres = '' OR SF2.F2_VEND1 = @codRepres)\n\tAND (@pedido = '' OR SD2APP.D2_PEDIDO = @pedido)\n\tAND (@notaFiscal ='' OR SF2.F2_DOC = @notaFiscal)\n\tAND (@codCliente ='' OR SF2.F2_CLIENTE = @codCliente)\n\tAND SF2.F2_EMISSAO >= @dataMinima\nORDER BY SF2.F2_EMISSAO DESC"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        -112
+      ],
+      "id": "776ff5a6-f7c5-4d28-964a-bb0f65943617",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "qmOAUmzucGnZXUAr",
+          "name": "User Basico Totvs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "=Olá Weverton, como posso te ajudar:\n1-Pedidos\n2-Nota Fiscal\n3-Status pedido"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        48,
+        128
+      ],
+      "id": "049b1ac7-59ff-4421-b4f8-e55796926fca",
+      "name": "Respond to Chat4",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega os NUM_NOTA retornados pelo node anterior\nconst notas = items.map(item => item.json.D2_PEDIDO);\n\n// Monta o texto no formato desejado\nlet resposta = \"Seus ultimos pedidos:\\n\";\n\nfor (const n of notas) {\n  resposta += `- ${n}\\n`;\n}\n\nreturn [\n  {\n    json: {\n      reply: resposta.trim() // remove \\n final\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -112
+      ],
+      "id": "84970358-574d-4b80-8ff0-25d5ba11a22c",
+      "name": "Code5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "=Me passe o numero do pedido que gostaria de saber:"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -112
+      ],
+      "id": "13c7837a-5f88-4e5d-8de3-7c6522d2d4bd",
+      "name": "Respond to Chat5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.reply }}",
+        "options": {
+          "systemMessage": "Você é um assistente virtual que auxilia a nossa industria na gestão de pedidos vc está recebendo as informações de um pedido e deve retornar ao chat as informações do pedido de forma descontraida."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        -112
+      ],
+      "id": "79df35bc-799b-4879-8c20-b9edb7278576",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        96
+      ],
+      "id": "5a08dff2-28b2-4f87-8619-47f6d52939ed",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "bjKkMgjLO795QJOq",
+          "name": "Open AI Paga"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1904,
+        96
+      ],
+      "id": "047cb96d-46ed-4272-808d-7fd0b95ef985",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM dbo.N8N_InformacoesPedidos ()"
+      },
+      "type": "n8n-nodes-base.microsoftSqlTool",
+      "typeVersion": 1.1,
+      "position": [
+        2176,
+        112
+      ],
+      "id": "e6ae9552-d918-4b73-a101-d364bb81123c",
+      "name": "Microsoft SQL1",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "DxwlTacZTwU5iAz0",
+          "name": "Microsoft SQL TOTVS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        -112
+      ],
+      "id": "ebacef13-2e76-4fbb-a14c-dbcd093ead04",
+      "name": "Respond to Chat6",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @notaFiscal VARCHAR(15) = ''\nDECLARE @codCliente VARCHAR(6) = '' \nDECLARE @codRepres VARCHAR(6) = '999999' \nDECLARE @pedido VARCHAR(10) = '{{ $json.chatInput }}'\nDECLARE @dataMinima VARCHAR(8) = '20250101';\n\nSELECT TOP 1\n\tF2_DOC AS NUM_NOTA,\n\tF2_VEND1,\n\tA3_NOME,\n\tF2_EMISSAO,\n\tF2_CLIENTE,\n\tA1_NOME,\n\tF2_VALBRUT,\n\tSD2APP.D2_PEDIDO,\n\tF2_CHVNFE\nFROM SF2010 AS SF2 WITH(NOLOCK)\nINNER JOIN SA3010 AS SA3 WITH(NOLOCK)\n\tON SA3.A3_COD = SF2.F2_VEND1\n\tAND SA3.D_E_L_E_T_ = ''\n\tAND SA3.A3_MSBLQL <> '1'\nINNER JOIN SA1010 AS SA1 WITH(NOLOCK)\n\tON SA1.A1_COD = SF2.F2_CLIENTE\n\tAND SA1.D_E_L_E_T_ = ''\n\tAND SA1.A1_MSBLQL <> '1'\nINNER JOIN (\n\tSELECT\n\tDISTINCT(D2_PEDIDO) AS D2_PEDIDO,\n\tD2_DOC,\n\tD2_LOJA,\n\tD2_SERIE,\n\tD2_CLIENTE\n\tFROM SD2010 AS SD2 WITH(NOLOCK)\n\tWHERE SD2.D_E_L_E_T_ = ''\n\tAND SD2.D2_PEDIDO <> ''\n\t) AS SD2APP\n\tON SD2APP.D2_DOC =  SF2.F2_DOC\n\tAND SD2APP.D2_SERIE = SF2.F2_SERIE\n\tAND SD2APP.D2_LOJA = SF2.F2_LOJA\n\tAND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE\nWHERE SF2.D_E_L_E_T_ = ''\n\tAND (@codRepres = '' OR SF2.F2_VEND1 = @codRepres)\n\tAND (@pedido = '' OR SD2APP.D2_PEDIDO = @pedido)\n\tAND (@notaFiscal ='' OR SF2.F2_DOC = @notaFiscal)\n\tAND (@codCliente ='' OR SF2.F2_CLIENTE = @codCliente)\n\tAND SF2.F2_EMISSAO >= @dataMinima\nORDER BY SF2.F2_EMISSAO DESC"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        -112
+      ],
+      "id": "e1da7eac-b1e6-4fe2-a8e8-67c5563e7ce4",
+      "name": "Microsoft SQL2",
+      "credentials": {
+        "microsoftSql": {
+          "id": "qmOAUmzucGnZXUAr",
+          "name": "User Basico Totvs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Como a query sempre retorna 1 linha, pegamos somente o primeiro item\nconst r = items[0].json;\n\n// Montando uma mensagem amigável\nconst mensagem = \n`📄 Detalhes do Pedido\n\n• Pedido: ${r.D2_PEDIDO}\n• Nota Fiscal: ${r.NUM_NOTA}\n• Cliente: ${r.A1_NOME} (${r.F2_CLIENTE})\n• Representante: ${r.A3_NOME} (${r.F2_VEND1})\n• Emissão: ${r.F2_EMISSAO}\n• Valor Bruto: R$ ${Number(r.F2_VALBRUT).toFixed(2)}\n• Chave NFe: ${r.F2_CHVNFE}\n\nDeseja consultar algo mais?`;\n\nreturn [\n  {\n    json: {\n      reply: mensagem\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        -112
+      ],
+      "id": "578a5bfd-bd57-4b5c-8b6f-70edfa8371a5",
+      "name": "Code",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "={{ $json.reply }}"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        976,
+        368
+      ],
+      "id": "f9f8815b-a411-4c86-af17-624c15e1a0af",
+      "name": "Respond to Chat1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @notaFiscal VARCHAR(15) = ''\nDECLARE @codCliente VARCHAR(6) = '' \nDECLARE @codRepres VARCHAR(6) = '999999' \nDECLARE @pedido VARCHAR(10) = ''\nDECLARE @dataMinima VARCHAR(8) = '20250101';\n\nSELECT TOP 6\n\tF2_DOC AS NUM_NOTA,\n\tF2_VEND1,\n\tA3_NOME,\n\tF2_EMISSAO,\n\tF2_CLIENTE,\n\tA1_NOME,\n\tF2_VALBRUT,\n\tSD2APP.D2_PEDIDO,\n\tF2_CHVNFE\nFROM SF2010 AS SF2 WITH(NOLOCK)\nINNER JOIN SA3010 AS SA3 WITH(NOLOCK)\n\tON SA3.A3_COD = SF2.F2_VEND1\n\tAND SA3.D_E_L_E_T_ = ''\n\tAND SA3.A3_MSBLQL <> '1'\nINNER JOIN SA1010 AS SA1 WITH(NOLOCK)\n\tON SA1.A1_COD = SF2.F2_CLIENTE\n\tAND SA1.D_E_L_E_T_ = ''\n\tAND SA1.A1_MSBLQL <> '1'\nINNER JOIN (\n\tSELECT\n\tDISTINCT(D2_PEDIDO) AS D2_PEDIDO,\n\tD2_DOC,\n\tD2_LOJA,\n\tD2_SERIE,\n\tD2_CLIENTE\n\tFROM SD2010 AS SD2 WITH(NOLOCK)\n\tWHERE SD2.D_E_L_E_T_ = ''\n\tAND SD2.D2_PEDIDO <> ''\n\t) AS SD2APP\n\tON SD2APP.D2_DOC =  SF2.F2_DOC\n\tAND SD2APP.D2_SERIE = SF2.F2_SERIE\n\tAND SD2APP.D2_LOJA = SF2.F2_LOJA\n\tAND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE\nWHERE SF2.D_E_L_E_T_ = ''\n\tAND (@codRepres = '' OR SF2.F2_VEND1 = @codRepres)\n\tAND (@pedido = '' OR SD2APP.D2_PEDIDO = @pedido)\n\tAND (@notaFiscal ='' OR SF2.F2_DOC = @notaFiscal)\n\tAND (@codCliente ='' OR SF2.F2_CLIENTE = @codCliente)\n\tAND SF2.F2_EMISSAO >= @dataMinima\nORDER BY SF2.F2_EMISSAO DESC"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        368
+      ],
+      "id": "67981b0b-eb7f-4f55-8a5d-b21061c98671",
+      "name": "Microsoft SQL3",
+      "credentials": {
+        "microsoftSql": {
+          "id": "qmOAUmzucGnZXUAr",
+          "name": "User Basico Totvs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega os NUM_NOTA retornados pelo node anterior\nconst notas = items.map(item => item.json.D2_PEDIDO);\n\n// Monta o texto no formato desejado\nlet resposta = \"Seus ultimos pedidos:\\n\";\n\nfor (const n of notas) {\n  resposta += `- ${n}\\n`;\n}\n\nreturn [\n  {\n    json: {\n      reply: resposta.trim() // remove \\n final\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        368
+      ],
+      "id": "13ee419f-d517-4765-9ffd-37fcf745f647",
+      "name": "Code6",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @notaFiscal VARCHAR(15) = ''\nDECLARE @codCliente VARCHAR(6) = '' \nDECLARE @codRepres VARCHAR(6) = '999999' \nDECLARE @pedido VARCHAR(10) = '{{ $json.chatInput }}'\nDECLARE @dataMinima VARCHAR(8) = '20250101';\n\nSELECT TOP 1\n\tF2_DOC AS NUM_NOTA,\n\tF2_VEND1,\n\tA3_NOME,\n\tF2_EMISSAO,\n\tF2_CLIENTE,\n\tA1_NOME,\n\tF2_VALBRUT,\n\tSD2APP.D2_PEDIDO,\n\tF2_CHVNFE\nFROM SF2010 AS SF2 WITH(NOLOCK)\nINNER JOIN SA3010 AS SA3 WITH(NOLOCK)\n\tON SA3.A3_COD = SF2.F2_VEND1\n\tAND SA3.D_E_L_E_T_ = ''\n\tAND SA3.A3_MSBLQL <> '1'\nINNER JOIN SA1010 AS SA1 WITH(NOLOCK)\n\tON SA1.A1_COD = SF2.F2_CLIENTE\n\tAND SA1.D_E_L_E_T_ = ''\n\tAND SA1.A1_MSBLQL <> '1'\nINNER JOIN (\n\tSELECT\n\tDISTINCT(D2_PEDIDO) AS D2_PEDIDO,\n\tD2_DOC,\n\tD2_LOJA,\n\tD2_SERIE,\n\tD2_CLIENTE\n\tFROM SD2010 AS SD2 WITH(NOLOCK)\n\tWHERE SD2.D_E_L_E_T_ = ''\n\tAND SD2.D2_PEDIDO <> ''\n\t) AS SD2APP\n\tON SD2APP.D2_DOC =  SF2.F2_DOC\n\tAND SD2APP.D2_SERIE = SF2.F2_SERIE\n\tAND SD2APP.D2_LOJA = SF2.F2_LOJA\n\tAND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE\nWHERE SF2.D_E_L_E_T_ = ''\n\tAND (@codRepres = '' OR SF2.F2_VEND1 = @codRepres)\n\tAND (@pedido = '' OR SD2APP.D2_PEDIDO = @pedido)\n\tAND (@notaFiscal ='' OR SF2.F2_DOC = @notaFiscal)\n\tAND (@codCliente ='' OR SF2.F2_CLIENTE = @codCliente)\n\tAND SF2.F2_EMISSAO >= @dataMinima\nORDER BY SF2.F2_EMISSAO DESC"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        368
+      ],
+      "id": "eaa2ce84-3cdc-48cf-96c6-77a0f8feba26",
+      "name": "Microsoft SQL4",
+      "credentials": {
+        "microsoftSql": {
+          "id": "qmOAUmzucGnZXUAr",
+          "name": "User Basico Totvs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Como a query sempre retorna 1 linha, pegamos somente o primeiro item\nconst r = items[0].json;\n\n// Montando uma mensagem amigável\nconst mensagem = \n`📄 Acesse o link para ver a nota fiscal:\n\nhttps://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=${r.F2_CHVNFE}\n\nDeseja consultar algo mais?`;\n\nreturn [\n  {\n    json: {\n      reply: mensagem\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        368
+      ],
+      "id": "22674615-a846-49e1-9a4d-13b70dcb142c",
+      "name": "Code1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "={{ $json.reply }}"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        368
+      ],
+      "id": "3efe5612-d698-4023-8c75-6cdc1c62f35d",
+      "name": "Respond to Chat9",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "=Me passe o numero do pedido que gostaria de saber:"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        368
+      ],
+      "id": "6e0f3cac-4d85-40ab-83ce-f540b7709c28",
+      "name": "Respond to Chat8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reply",
+              "value": "=No momento voce não tem pedidos em Produção\n\nDigite uma nova mensagem:"
+            }
+          ]
+        },
+        "keepOnlySet": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        560,
+        592
+      ],
+      "id": "c0651b30-df1a-4502-a9d2-d8d2bfa00e0c",
+      "name": "Respond to Chat12",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Microsoft SQL3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat4": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat5": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL3": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL4": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat9": {
+      "main": [
+        []
+      ]
+    },
+    "Respond to Chat8": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9339510d-7f62-4f79-ad84-c3a84d534f3f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e0d7e94f6d83047ceb4c6633d3d250b4bc2f59f3afa63e3c2d8bde6641c6ee83"
+  },
+  "id": "GwGZ9uAaAEuGbZMR",
+  "tags": [
+    {
+      "updatedAt": "2025-12-05T20:03:39.800Z",
+      "createdAt": "2025-12-05T20:03:39.800Z",
+      "id": "rOBZADYI8fcR2cWk",
+      "name": "Comercial"
+    }
+  ]
+}
