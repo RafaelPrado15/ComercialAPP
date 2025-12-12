@@ -142,3 +142,11 @@ Deve ser feito um banco de dados em sql lite. O banco de dados deve ter as segui
 - Empresas
 
 Gostaria de vincular o usuario a empresa.
+
+---------------------------------------------------------------------------------------------------
+
+Fazer paginação na tela de pedidos e notas.
+No mobile o slack está sobre escrevendo a logo, corrija.
+
+-----------
+Tenho um agente de IA feito no N8N e gostaria de adicionar ele ao app, para isso preciso que adicione um novo button no menu, que ao clicar ele abra uma tela de chat com o agente de IA. Que irei integrar com o chatbot do N8N. (Escolha o melhor jeito de fazer isso e um bom nome para o button.)

@@ -23,4 +23,4 @@ class Config:
     # N8N Configuration
     # Webhook ID from 'Faq Inteligente.json': 3d061473-a4b8-4ee9-9796-848e05a5596e
     # User provided test URL
-    N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL') or 'http://192.168.117.53:5678/webhook-test/chat'
+    N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL') or 'http://192.168.117.53:5678/webhook/77bf3863-6382-4322-af2f-8d39f961952b'

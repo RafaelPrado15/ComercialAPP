@@ -168,6 +168,29 @@ def rastreio():
     return render_template('rastreio.html', kanban_data=kanban_data)
 
 
+
+def get_customer_name(cod_cliente):
+    """
+    Fetches the customer name (A1_NOME) from SA1010 table for a given client code (A1_COD).
+    """
+    conn = get_sql_server_connection()
+    if not conn:
+        return None
+    
+    try:
+        cursor = conn.cursor()
+        query = "SELECT A1_NOME FROM SA1010 WITH(NOLOCK) WHERE A1_COD = ? AND D_E_L_E_T_ = ''"
+        cursor.execute(query, (cod_cliente,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return row[0].strip()
+        return None
+    except Exception as e:
+        print(f"Error fetching customer name: {e}")
+        return None
+
 def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
     """
     Helper to fetch commercial data using the provided complex query.
@@ -410,10 +433,26 @@ def chat_send():
     n8n_url = Config.N8N_WEBHOOK_URL if hasattr(Config, 'N8N_WEBHOOK_URL') else "http://localhost:5678/webhook/3d061473-a4b8-4ee9-9796-848e05a5596e/chat"
     
     try:
+        # Get active company to find the client name
+        active_id = session.get('active_company_id')
+        user_company = Company.query.get(active_id) if active_id else None
+        
+        client_name = "Desconhecido"
+        if user_company:
+             # Try to fetch from SQL Server
+            name_from_db = get_customer_name(user_company.cod_cliente)
+            if name_from_db:
+                client_name = name_from_db
+            else:
+                 # Fallback or maybe the company name itself if not found in ERP?
+                 # Ignoring company.name validation against ERP for now.
+                 pass
+
         # Payload for n8n Webhook
         payload = {
             "chatInput": message,
-            "sessionId": session_id
+            "sessionId": session_id,
+            "A1_NOME": client_name
         }
         
         print(f"DEBUG: Sending POST to {n8n_url}")
