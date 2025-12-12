@@ -22,6 +22,14 @@
             <div class="col-md-4 mt-2"><strong>Nota Fiscal:</strong> {{ pedido.NUM_NOTA }}</div>
             <div class="col-md-4 mt-2"><strong>Emissão:</strong> {{ pedido.F2_EMISSAO }}</div>
             <div class="col-md-4 mt-2"><strong>Valor Bruto:</strong> R$ {{ pedido.F2_VALBRUT }}</div>
+            <div class="col-md-4 mt-2"><strong>Chave de Acesso:</strong> {{ pedido.F2_CHVNFE }}</div>
+            <div class="col-md-4 mt-2">
+                <strong>Consulta NFe:</strong>
+                <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g=&nfe={{ pedido.F2_CHVNFE }}"
+                    target="_blank" class="text-decoration-none">
+                    <i class="bi bi-box-arrow-up-right"></i> Consultar na Fazenda
+                </a>
+            </div>
         </div>
     </div>
 </div>

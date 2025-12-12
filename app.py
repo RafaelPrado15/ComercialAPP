@@ -338,9 +338,10 @@ def pedido_detail(id):
 
     return render_template('pedido_detail.html', pedido=data[0] if data else None, items=data) 
 
-@app.route('/notas')
+
+@app.route('/insights')
 @login_required
-def notas():
+def insights():
     active_id = session.get('active_company_id')
     user_company = Company.query.get(active_id) if active_id else None
 
@@ -350,55 +351,42 @@ def notas():
 
     data = fetch_commercial_data(user_company.cod_cliente)
     
-    # Process for Unique Notas
-    invoices_list = []
+    # Process data for chart: Total Sales by Month/Year
+    # Data structure expected: 'F2_EMISSAO': 'YYYYMMDD', 'F2_VALBRUT': float
+    
+    chart_labels = []
+    chart_values = []
+    
     if data:
-        seen = set()
+        from collections import defaultdict
+        
+        # Aggregate by Year-Month
+        monthly_sales = defaultdict(float)
+        
         for row in data:
-            nid = row['NUM_NOTA']
-            if nid not in seen:
-                seen.add(nid)
-                invoices_list.append(row)
-    
-    if data is None:
-        invoices_list = [
-            {'NUM_NOTA': '000101', 'D2_PEDIDO': '123456', 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'F2_CHVNFE': '352511...'}
-        ]
-        for i in range(1, 15):
-             invoices_list.append({'NUM_NOTA': f'00{i:04d}', 'D2_PEDIDO': f'99{i:04d}', 'F2_EMISSAO': '20251201', 'F2_VALBRUT': 500.00 * i, 'F2_CHVNFE': f'Key{i}'})
+            emissao = str(row.get('F2_EMISSAO', ''))
+            val = float(row.get('F2_VALBRUT', 0))
+            
+            if len(emissao) >= 6:
+                ym = emissao[:6] # YYYYMM
+                monthly_sales[ym] += val
+        
+        # Sort by date
+        sorted_keys = sorted(monthly_sales.keys())
+        
+        # Format labels and values
+        for key in sorted_keys:
+            # Format YYYYMM to MM/YYYY
+            label = f"{key[4:6]}/{key[:4]}"
+            chart_labels.append(label)
+            chart_values.append(monthly_sales[key])
+            
+    else:
+        # Mock data if no DB result
+        chart_labels = ['01/2025', '02/2025', '03/2025', '04/2025', '05/2025', '06/2025']
+        chart_values = [15000.0, 22000.0, 18500.0, 31000.0, 28000.0, 35000.0]
 
-    # Filtering
-    search = request.args.get('search', '').lower()
-    if search:
-        invoices_list = [n for n in invoices_list if search in str(n.get('NUM_NOTA', '')).lower() or search in str(n.get('D2_PEDIDO', '')).lower()]
-
-    # Pagination
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    total_items = len(invoices_list)
-    total_pages = (total_items + per_page - 1) // per_page
-    
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_invoices = invoices_list[start:end]
-
-    return render_template('notas.html', invoices=paginated_invoices, page=page, total_pages=total_pages, search=search)
-
-@app.route('/notas/<id>')
-@login_required
-def nota_detail(id):
-    active_id = session.get('active_company_id')
-    user_company = Company.query.get(active_id) if active_id else None
-
-    if not user_company or user_company not in current_user.companies:
-         return redirect(url_for('menu'))
-         
-    # Fetch specific
-    data = fetch_commercial_data(user_company.cod_cliente, nota=id)
-    if data is None:
-        data = [{'NUM_NOTA': id, 'D2_PEDIDO': '123456', 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'F2_CHVNFE': '352511...', 'A1_NOME': 'Cliente Teste'}]
-
-    return render_template('nota_detail.html', nota=data[0] if data else None, items=data)
+    return render_template('insights.html', labels=chart_labels, values=chart_values)
 
 
 @app.route('/chat')
