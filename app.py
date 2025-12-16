@@ -1,5 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+import requests
+from io import BytesIO
 from config import Config
 from database import db, get_sql_server_connection
 from models import User, Company, UserCompany
@@ -337,6 +339,54 @@ def pedido_detail(id):
         data = [{'D2_PEDIDO': id, 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'StatusPedido': 'Faturado', 'NUM_NOTA': '000101', 'A1_NOME': 'Cliente Teste', 'A3_NOME': 'Vendedor Teste', 'F2_CHVNFE': '352511...0001'}]
 
     return render_template('pedido_detail.html', pedido=data[0] if data else None, items=data) 
+
+@app.route('/pedidos/download_nfe/<path:nfe_key>')
+@login_required
+def download_nfe(nfe_key):
+    """
+    Proxy to download NFE PDF from internal server.
+    """
+    # 1. Fetch JSON with PDF URL
+    # https://192.168.117.11:8015/rest/GetDANFE/{chave}
+    json_url = f"https://192.168.117.11:8015/rest/GetDANFE/{nfe_key}"
+    
+    try:
+        # Verify=False because internal self-signed certs might issue warnings
+        resp = requests.get(json_url, verify=False, timeout=10)
+        
+        if resp.status_code != 200:
+            flash(f"Erro ao consultar DANFE: Status {resp.status_code}", "danger")
+            return redirect(request.referrer or url_for('pedidos'))
+            
+        data = resp.json()
+        
+        # Structure: {"RETORNOS": {"DANFE": "url...", "XML": "url..."}}
+        pdf_url = data.get('RETORNOS', {}).get('DANFE')
+        
+        if not pdf_url:
+             flash("URL do PDF não encontrada na resposta do servidor.", "warning")
+             return redirect(request.referrer or url_for('pedidos'))
+             
+        # 2. Download the PDF
+        # The URL in JSON might be http usually.
+        pdf_resp = requests.get(pdf_url, verify=False, timeout=30)
+        
+        if pdf_resp.status_code == 200:
+            filename = f"{nfe_key}.pdf"
+            return send_file(
+                BytesIO(pdf_resp.content),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+        else:
+             flash(f"Erro ao baixar arquivo PDF: Status {pdf_resp.status_code}", "danger")
+             return redirect(request.referrer or url_for('pedidos'))
+
+    except Exception as e:
+        print(f"Exception in download_nfe: {e}")
+        flash("Erro interno ao tentar baixar a nota.", "danger")
+        return redirect(request.referrer or url_for('pedidos')) 
 
 
 @app.route('/insights')
