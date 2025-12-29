@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import requests
 from io import BytesIO
+from datetime import datetime, timedelta
 from config import Config
 from database import db, get_sql_server_connection
 from models import User, Company, UserCompany
@@ -126,10 +127,41 @@ def rastreio():
          flash("Selecione uma empresa válida.", "warning")
          return redirect(url_for('menu'))
     
-    # Mock data for when SQL Server is not available
+    # Date Filtering
+    # Default to last 2 months if not provided
+    today = datetime.now()
+    default_start = (today - timedelta(days=60)).strftime('%Y-%m-%d')
+    default_end = today.strftime('%Y-%m-%d')
+    
+    start_date = request.args.get('start_date', default_start)
+    end_date = request.args.get('end_date', default_end)
+    
+    # Format dates for SQL (YYYYMMDD)
+    try:
+        dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+        dt_end = datetime.strptime(end_date, '%Y-%m-%d')
+        site_start = dt_start.strftime('%Y%m%d')
+        site_end = dt_end.strftime('%Y%m%d')
+    except ValueError:
+        flash("Formato de data inválido.", "danger")
+        start_date = default_start
+        end_date = default_end
+        site_start = (today - timedelta(days=60)).strftime('%Y%m%d')
+        site_end = today.strftime('%Y%m%d')
+        
+    order_number = request.args.get('order_number', '')
+
+    print(f"DEBUG: start_date={start_date}, end_date={end_date}, order_number={order_number}")
+    print(f"DEBUG: site_start={site_start}, site_end={site_end}")
+    
+    if start_date != default_start or end_date != default_end:
+        flash(f"Filtrando de {start_date} até {end_date}", "info")
+
     kanban_data = {
-        'Pendentes': [],
-        'Em Fábrica': [],
+        'Comercial': [],
+        'Produção': [],
+        'Separação': [],
+        'Conferência': [],
         'Faturado': []
     }
 
@@ -137,10 +169,48 @@ def rastreio():
     if conn:
         try:
             cursor = conn.cursor()
-            # Select relevant columns
-            query = "SELECT NumeroPedido, Vendedor, StatusPedido, Emissao, PrevisaoFaturamento, Cliente FROM N8N_InformacoesPedidos()"
             
-            cursor.execute(query)
+            # Base Query
+            query = """
+            SELECT 
+                SC5.C5_NUM AS NumeroPedido,
+                SC5.C5_VEND1 AS CodRepresentante,
+                SC5.C5_CLIENTE AS CodCliente, 
+                RTRIM(LTRIM(SA1.A1_NOME)) AS Cliente,
+                SC5.C5_EMISSAO AS Emissao,
+                SC5.C5_FECENT AS PrevisaoFaturamento,
+                SC5.C5_XPEDAGE AS Agendado,
+                SC5.C5_EVENTO AS Evento,
+                CASE 
+                    WHEN SC5.C5_EVENTO IN ('1', '2') THEN 'Pedido No Comercial'
+                    WHEN SC5.C5_EVENTO IN ('9', '5') AND SC5.C5_SEPARA = 'F' THEN 'Pedido Em Produção'
+                    WHEN SC5.C5_EVENTO IN ('5') AND SC5.C5_SEPARA = 'T' THEN 'Pedido Em Separação'
+                    WHEN SC5.C5_EVENTO IN ('6') THEN 'Pedido Em Conferência'
+                    WHEN SC5.C5_EVENTO IN ('7') THEN 'Pedido Em Faturamento'
+                    ELSE '' 
+                END AS EventoFormatado
+            FROM SC5010 SC5 WITH(NOLOCK) 
+            INNER JOIN SA1010 SA1 WITH(NOLOCK) 
+                ON SA1.A1_FILIAL = '' 
+                AND SA1.A1_COD = SC5.C5_CLIENTE 
+                AND SA1.A1_LOJA = SC5.C5_LOJACLI 
+                AND SA1.D_E_L_E_T_ = ''
+            WHERE SC5.C5_FILIAL = '0101'
+            AND SC5.D_E_L_E_T_ = ''
+            AND SC5.C5_EVENTO IN ('1', '2', '5', '6', '7', '9')
+            AND SC5.C5_CLIENTE = ?
+            AND SC5.C5_EMISSAO BETWEEN ? AND ?
+            """
+            
+            params = [user_company.cod_cliente, site_start, site_end]
+            
+            if order_number:
+                query += " AND SC5.C5_NUM LIKE ? "
+                params.append(f"%{order_number}%")
+            
+            query += " ORDER BY SC5.C5_EMISSAO DESC"
+            
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
             
             columns = [column[0] for column in cursor.description]
@@ -148,26 +218,48 @@ def rastreio():
             for row in rows:
                 results.append(dict(zip(columns, row)))
             
-            cod_cliente = user_company.cod_cliente
-            
-            for row in results:
-                if str(row.get('Cliente')).strip() == str(cod_cliente).strip():
-                    status = row.get('StatusPedido')
-                    if status in kanban_data:
-                        kanban_data[status].append(row)
-                    else:
-                        kanban_data.setdefault('Pendentes', []).append(row)
-
             conn.close()
+            
+            # Categorize results into Kanban
+            for row in results:
+                evento_fmt = row.get('EventoFormatado')
+                
+                if 'Pedido No Comercial' in evento_fmt:
+                    kanban_data['Comercial'].append(row)
+                elif 'Pedido Em Produção' in evento_fmt:
+                    kanban_data['Produção'].append(row)
+                elif 'Pedido Em Separação' in evento_fmt:
+                    kanban_data['Separação'].append(row)
+                elif 'Pedido Em Conferência' in evento_fmt:
+                    kanban_data['Conferência'].append(row)
+                elif 'Pedido Em Faturamento' in evento_fmt:
+                    kanban_data['Faturado'].append(row)
+                else:
+                    # Fallback
+                    kanban_data.setdefault('Comercial', []).append(row)
+
         except Exception as e:
             flash(f"Erro ao buscar dados: {e}", "danger")
     else:
-        # Mock mode
-        kanban_data['Pendentes'].append({'NumeroPedido': '123', 'StatusPedido': 'Pendentes', 'Emissao': '20250101', 'PrevisaoFaturamento': '20250110'})
-        kanban_data['Em Fábrica'].append({'NumeroPedido': '124', 'StatusPedido': 'Em Fábrica', 'Emissao': '20250102', 'PrevisaoFaturamento': '20250112'})
-        kanban_data['Faturado'].append({'NumeroPedido': '125', 'StatusPedido': 'Faturado', 'Emissao': '20241220', 'PrevisaoFaturamento': '20241225'})
+        # Mock mode with current dates
+        m_today = datetime.now()
+        # Mock data (unchanged)
+        kanban_data['Comercial'].append({
+            'NumeroPedido': 'MOCK123', 
+            'Emissao': (m_today - timedelta(days=2)).strftime('%Y%m%d'), 
+            'PrevisaoFaturamento': (m_today + timedelta(days=5)).strftime('%Y%m%d'), 
+            'EventoFormatado': 'Pedido No Comercial',
+            'Agendado': ''
+        })
+        kanban_data['Produção'].append({
+            'NumeroPedido': 'MOCK124', 
+            'Emissao': (m_today - timedelta(days=10)).strftime('%Y%m%d'), 
+            'PrevisaoFaturamento': (m_today + timedelta(days=2)).strftime('%Y%m%d'), 
+            'EventoFormatado': 'Pedido Em Produção',
+            'Agendado': ''
+        })
 
-    return render_template('rastreio.html', kanban_data=kanban_data)
+    return render_template('rastreio.html', kanban_data=kanban_data, start_date=start_date, end_date=end_date, order_number=order_number)
 
 
 

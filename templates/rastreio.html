@@ -3,6 +3,7 @@
 {% block title %}Rastreio de Pedidos - Pradolux{% endblock %}
 
 {% block content %}
+
 <div class="row mb-4">
     <div class="col">
         <h2>Rastreio de Pedidos</h2>
@@ -13,66 +14,239 @@
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Coluna Pendentes -->
-    <div class="col-md-4">
-        <div class="card h-100 bg-light border-0">
-            <div class="card-header bg-warning text-dark fw-bold text-center">
-                Pendentes ({{ kanban_data['Pendentes']|length }})
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('rastreio') }}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">Data Inicial</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
             </div>
-            <div class="card-body overflow-auto" style="max-height: 70vh;">
-                {% for item in kanban_data['Pendentes'] %}
-                <div class="card mb-3 shadow-sm">
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">Data Final</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="order_number" class="form-label">Número do Pedido</label>
+                <input type="text" class="form-control" id="order_number" name="order_number" value="{{ order_number }}"
+                    placeholder="Ex: 12345">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Kanban Flow / Evolution Styles */
+    .kanban-col {
+        position: relative;
+        padding-right: 15px;
+    }
+
+    .chevron-header {
+        position: relative;
+        padding: 15px;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 15px;
+        clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%, 10% 50%);
+        /* Arrow shape */
+        border-radius: 4px;
+        /* Slight roundness */
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        display: flex;
+        /* Centering content properly */
+        align-items: center;
+        justify-content: center;
+        min-height: 50px;
+    }
+
+    /* Colors for each step */
+    .step-1 {
+        background: #6c757d;
+    }
+
+    /* Gray */
+    .step-2 {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    /* Warning */
+    .step-3 {
+        background: #0dcaf0;
+    }
+
+    /* Info */
+    .step-4 {
+        background: #0d6efd;
+    }
+
+    /* Primary */
+    .step-5 {
+        background: #198754;
+    }
+
+    /* Success */
+
+    /* Adjust the shape for the first and last item if needed, 
+       but keeping uniform shape usually looks better for 'continuous flow' */
+
+    .orders-container {
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 #f8f9fa;
+    }
+
+    .order-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        border-left: 4px solid transparent;
+        background: white;
+    }
+
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .order-card.step-1-border {
+        border-left-color: #6c757d;
+    }
+
+    .order-card.step-2-border {
+        border-left-color: #ffc107;
+    }
+
+    .order-card.step-3-border {
+        border-left-color: #0dcaf0;
+    }
+
+    .order-card.step-4-border {
+        border-left-color: #0d6efd;
+    }
+
+    .order-card.step-5-border {
+        border-left-color: #198754;
+    }
+</style>
+
+<div class="overflow-auto pb-3 orders-container"> <!-- Wrapper for scroll -->
+    <div class="row flex-nowrap g-3" style="min-width: 100%;"> <!-- Row -->
+
+        <!-- Coluna Comercial (Step 1) -->
+        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+            <div class="chevron-header step-1">
+                1. Comercial ({{ kanban_data['Comercial']|length }})
+            </div>
+            <div class="overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Comercial'] %}
+                <div class="card mb-3 shadow-sm order-card step-1-border">
                     <div class="card-body">
-                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
-                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
-                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold text-secondary mb-0">#{{ item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao }}</small>
+                        </div>
+                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
+                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-    </div>
 
-    <!-- Coluna Em Fábrica -->
-    <div class="col-md-4">
-        <div class="card h-100 bg-light border-0">
-            <div class="card-header bg-primary text-white fw-bold text-center">
-                Em Fábrica ({{ kanban_data['Em Fábrica']|length }})
+        <!-- Coluna Produção (Step 2) -->
+        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+            <div class="chevron-header step-2">
+                2. Produção ({{ kanban_data['Produção']|length }})
             </div>
-            <div class="card-body overflow-auto" style="max-height: 70vh;">
-                {% for item in kanban_data['Em Fábrica'] %}
-                <div class="card mb-3 shadow-sm">
+            <div class="overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Produção'] %}
+                <div class="card mb-3 shadow-sm order-card step-2-border">
                     <div class="card-body">
-                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
-                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
-                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold text-warning mb-0" style="filter: brightness(0.85);">
+                                #{{ item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao }}</small>
+                        </div>
+                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
+                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-    </div>
 
-    <!-- Coluna Faturado -->
-    <div class="col-md-4">
-        <div class="card h-100 bg-light border-0">
-            <div class="card-header bg-success text-white fw-bold text-center">
-                Faturado ({{ kanban_data['Faturado']|length }})
+        <!-- Coluna Separação (Step 3) -->
+        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+            <div class="chevron-header step-3">
+                3. Separação ({{ kanban_data['Separação']|length }})
             </div>
-            <div class="card-body overflow-auto" style="max-height: 70vh;">
+            <div class="overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Separação'] %}
+                <div class="card mb-3 shadow-sm order-card step-3-border">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold text-info mb-0" style="filter: brightness(0.85);">#{{
+                                item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao }}</small>
+                        </div>
+                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
+                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Coluna Conferência (Step 4) -->
+        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+            <div class="chevron-header step-4">
+                4. Conferência ({{ kanban_data['Conferência']|length }})
+            </div>
+            <div class="overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Conferência'] %}
+                <div class="card mb-3 shadow-sm order-card step-4-border">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold text-primary mb-0">#{{ item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao }}</small>
+                        </div>
+                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
+                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Coluna Faturado (Step 5) -->
+        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+            <div class="chevron-header step-5">
+                5. Faturado ({{ kanban_data['Faturado']|length }})
+            </div>
+            <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Faturado'] %}
-                <div class="card mb-3 shadow-sm">
+                <div class="card mb-3 shadow-sm order-card step-5-border">
                     <div class="card-body">
-                        <h5 class="card-title">Pedido: {{ item.NumeroPedido }}</h5>
-                        <p class="card-text small mb-1"><strong>Emissão:</strong> {{ item.Emissao }}</p>
-                        <p class="card-text small mb-1"><strong>Previsão:</strong> {{ item.PrevisaoFaturamento }}</p>
-                        <span class="badge bg-success float-end">Concluído</span>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold text-success mb-0">#{{ item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao }}</small>
+                        </div>
+                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">Prev: {{ item.PrevisaoFaturamento }}</small>
+                            <span class="badge bg-success rounded-pill px-2">Concluído</span>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
