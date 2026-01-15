@@ -40,47 +40,50 @@
                     <ul class="navbar-nav align-items-center">
                         {% if current_user.is_authenticated %}
 
-                        <!-- Company Switcher -->
-                        {% if user_companies and user_companies|length > 1 %}
+                        <!-- Representative Switcher -->
+                        {% if all_representatives and all_representatives|length > 0 %}
                         <li class="nav-item dropdown me-2">
                             <a class="nav-link dropdown-toggle text-white border rounded px-2 d-flex align-items-center"
-                                href="#" id="companyDropdown" role="button" data-bs-toggle="dropdown"
-                                aria-expanded="false" style="border-color: rgba(255,255,255,0.5) !important;">
-                                <i class="bi bi-building me-1"></i> <span class="d-none d-lg-inline">{{
-                                    active_company.name[:15] + '...' if active_company and active_company.name|length >
-                                    15 else (active_company.name if active_company else 'Empresa') }}</span>
+                                href="#" id="repDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                style="border-color: rgba(255,255,255,0.5) !important;">
+                                <i class="bi bi-person-badge me-1"></i> <span class="d-none d-lg-inline">{{
+                                    active_representative.name[:15] + '...' if active_representative and
+                                    active_representative.name|length >
+                                    15 else (active_representative.name if active_representative else 'Representante')
+                                    }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="companyDropdown"
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="repDropdown"
                                 style="min-width: 300px;">
                                 <li>
-                                    <h6 class="dropdown-header">Selecionar Empresa</h6>
+                                    <h6 class="dropdown-header">Selecionar Representante</h6>
                                 </li>
                                 <li>
                                     <div class="px-3 py-2">
                                         <!-- stopPropagation prevents dropdown close on click -->
-                                        <input type="text" class="form-control form-control-sm" id="companySearchInput"
-                                            placeholder="Pesquisar..." onkeyup="filterCompanies()"
+                                        <input type="text" class="form-control form-control-sm" id="repSearchInput"
+                                            placeholder="Pesquisar..." onkeyup="filterReps()"
                                             onclick="event.stopPropagation()">
                                     </div>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <div id="companyList">
-                                    {% for company in user_companies %}
+                                <div id="repList">
+                                    {% for rep in all_representatives %}
                                     <li>
-                                        <a class="dropdown-item company-item {% if active_company and active_company.id == company.id %}active{% endif %}"
-                                            href="{{ url_for('set_company', company_id=company.id) }}">
-                                            <strong>{{ company.name }}</strong> <br><small class="text-muted">{{
-                                                company.cod_cliente }}</small>
+                                        <a class="dropdown-item rep-item {% if active_representative and active_representative.id == rep.id %}active{% endif %}"
+                                            href="{{ url_for('set_representative', rep_id=rep.id) }}">
+                                            <strong>{{ rep.name }}</strong> <br><small class="text-muted">{{
+                                                rep.id }}</small>
                                             <!-- Hidden searchable text -->
-                                            <span class="d-none search-data">{{ company.name }} {{ company.cod_cliente
+                                            <span class="d-none search-data">{{ rep.name }} {{ rep.id
                                                 }}</span>
                                         </a>
                                     </li>
                                     {% endfor %}
                                 </div>
-                                <li id="noResults" class="px-3 text-muted small d-none">Nenhuma empresa encontrada.</li>
+                                <li id="noResults" class="px-3 text-muted small d-none">Nenhum representante encontrado.
+                                </li>
                             </ul>
                         </li>
                         {% endif %}
@@ -119,11 +122,11 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
     <script>
-        function filterCompanies() {
+        function filterReps() {
             var input, filter, list, items, a, i, txtValue, noRes;
-            input = document.getElementById("companySearchInput");
+            input = document.getElementById("repSearchInput");
             filter = input.value.toUpperCase();
-            list = document.getElementById("companyList");
+            list = document.getElementById("repList");
             items = list.getElementsByTagName("li");
             noRes = document.getElementById("noResults");
             var visibleCount = 0;

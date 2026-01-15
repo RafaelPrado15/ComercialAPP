@@ -10,7 +10,6 @@
             <p class="text-muted">Selecione uma opção abaixo para continuar</p>
         </div>
 
-        {% if user_company %}
         <!-- Changed to row-cols-1 for mobile (list view) and row-cols-md-3 for desktop -->
         <div class="row row-cols-1 row-cols-md-3 g-3 justify-content-center">
 
@@ -89,14 +88,6 @@
             </div>
 
         </div>
-        {% else %}
-        <div class="alert alert-warning text-center p-5" role="alert">
-            <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Atenção!</h4>
-            <p>Seu usuário não está vinculado a nenhuma empresa.</p>
-            <hr>
-            <p class="mb-0">Entre em contato com o administrador do sistema para solicitar o vínculo.</p>
-        </div>
-        {% endif %}
 
         <div class="text-center mt-5">
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger px-4">

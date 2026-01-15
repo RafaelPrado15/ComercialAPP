@@ -23,28 +23,61 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
+def get_all_representatives():
+    """
+    Fetches all active representatives from SA3010 table.
+    """
+    conn = get_sql_server_connection()
+    if not conn:
+        return []
+    
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT A3_COD, A3_NOME FROM SA3010 
+        WHERE D_E_L_E_T_ <> '*' 
+          AND A3_MSBLQL <> '1'
+        ORDER BY A3_NOME
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        reps = []
+        for row in rows:
+            reps.append({'id': row[0].strip(), 'name': row[1].strip()})
+        return reps
+    except Exception as e:
+        print(f"Error fetching representatives: {e}")
+        return []
+
 @app.context_processor
-def inject_company_context():
-    active_company = None
-    user_companies = []
+def inject_representative_context():
+    active_representative = None
+    all_representatives = []
     
     if current_user.is_authenticated:
-        user_companies = current_user.companies
-        active_id = session.get('active_company_id')
+        # For managers, we fetch all representatives from ERP
+        all_representatives = get_all_representatives()
+        
+        active_id = session.get('active_representative_id')
         
         if active_id:
-            active_company = Company.query.get(active_id)
-            # Verify user owns this company
-            if active_company not in user_companies:
-                 active_company = user_companies[0] if user_companies else None
-                 if active_company:
-                    session['active_company_id'] = active_company.id
+            # Find the active representative in the list
+            for rep in all_representatives:
+                if rep['id'] == active_id:
+                    active_representative = rep
+                    break
+            
+            if not active_representative and all_representatives:
+                active_representative = all_representatives[0]
+                session['active_representative_id'] = active_representative['id']
         else:
-            if user_companies:
-                active_company = user_companies[0]
-                session['active_company_id'] = active_company.id
+            if all_representatives:
+                active_representative = all_representatives[0]
+                session['active_representative_id'] = active_representative['id']
 
-    return dict(active_company=active_company, user_companies=user_companies, min=min, max=max)
+    return dict(active_representative=active_representative, all_representatives=all_representatives, min=min, max=max)
 
 @app.route('/')
 def index():
@@ -66,11 +99,6 @@ def login():
         
         if user and user.check_password(password):
             login_user(user, remember=remember)
-            # Set default company on login
-            if user.companies:
-                session['active_company_id'] = user.companies[0].id
-            else:
-                 session.pop('active_company_id', None)
             return redirect(url_for('menu'))
         else:
             # flash('Usuário ou senha incorretos!', 'danger')
@@ -82,19 +110,17 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    session.pop('active_company_id', None)
+    session.pop('active_representative_id', None)
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/set_company/<int:company_id>')
+@app.route('/set_representative/<string:rep_id>')
 @login_required
-def set_company(company_id):
-    company = Company.query.get_or_404(company_id)
-    if company in current_user.companies:
-        session['active_company_id'] = company.id
-        flash(f"Empresa alterada para {company.name}", "success")
-    else:
-        flash("Acesso negado a esta empresa.", "danger")
+def set_representative(rep_id):
+    # Since managers can see all, we just set the ID in session
+    # In a more restricted app, we'd verify if the user has access to this rep_id
+    session['active_representative_id'] = rep_id
+    flash(f"Representante alterado.", "success")
     
     # Redirect back to where the user came from, or menu
     return redirect(request.referrer or url_for('menu'))
@@ -102,29 +128,18 @@ def set_company(company_id):
 @app.route('/menu')
 @login_required
 def menu():
-    # Context processor handles injection, but we can verify here if needed
-    active_company = None
-    if current_user.companies:
-        active_id = session.get('active_company_id')
-        if active_id:
-             active_company = Company.query.get(active_id)
-        else:
-             active_company = current_user.companies[0]
-             session['active_company_id'] = active_company.id
-
-    return render_template('menu.html', user_company=active_company)
+    # Context processor handles injection of active_representative
+    return render_template('menu.html')
 
 
 @app.route('/rastreio')
 @login_required
 def rastreio():
-    # Get active company from session (or context)
-    active_id = session.get('active_company_id')
-    user_company = Company.query.get(active_id) if active_id else None
+    # Get active representative from session
+    active_rep_id = session.get('active_representative_id')
 
-    # Validate ownership just in case
-    if not user_company or user_company not in current_user.companies:
-         flash("Selecione uma empresa válida.", "warning")
+    if not active_rep_id:
+         flash("Selecione um representante válido.", "warning")
          return redirect(url_for('menu'))
     
     # Date Filtering
@@ -198,11 +213,11 @@ def rastreio():
             WHERE SC5.C5_FILIAL = '0101'
             AND SC5.D_E_L_E_T_ = ''
             AND SC5.C5_EVENTO IN ('1', '2', '5', '6', '7', '9')
-            AND SC5.C5_CLIENTE = ?
+            AND SC5.C5_VEND1 = ?
             AND SC5.C5_EMISSAO BETWEEN ? AND ?
             """
             
-            params = [user_company.cod_cliente, site_start, site_end]
+            params = [active_rep_id, site_start, site_end]
             
             if order_number:
                 query += " AND SC5.C5_NUM LIKE ? "
@@ -336,7 +351,7 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
             ON INFO_PED.NumeroPedido = SD2APP.D2_PEDIDO
             AND INFO_PED.Vendedor = SF2.F2_VEND1
         WHERE SF2.D_E_L_E_T_ = ''
-            AND (? = '' OR SF2.F2_VEND1 = ?) 
+            AND SF2.F2_VEND1 = ? 
             AND (? = '' OR SD2APP.D2_PEDIDO = ?) 
             AND (? = '' OR SF2.F2_DOC = ?) 
             AND (? = '' OR SF2.F2_CLIENTE = ?) 
@@ -344,13 +359,13 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
         ORDER BY SF2.F2_EMISSAO DESC
         """
         
-        cod_repres = '' 
+        cod_repres = cod_cliente # In this function, cod_cliente parameter is being reused for Vendedor
         p_pedido = pedido if pedido else ''
         p_nota = nota if nota else ''
-        p_cliente = cod_cliente
+        p_cliente = '' # Removing client filter to see all from rep
         data_minima = '20240101'
         
-        params = (cod_repres, cod_repres, p_pedido, p_pedido, p_nota, p_nota, p_cliente, p_cliente, data_minima)
+        params = (cod_repres, p_pedido, p_pedido, p_nota, p_nota, p_cliente, p_cliente, data_minima)
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -370,14 +385,12 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
 @app.route('/pedidos')
 @login_required
 def pedidos():
-    active_id = session.get('active_company_id')
-    user_company = Company.query.get(active_id) if active_id else None
-
-    if not user_company or user_company not in current_user.companies:
-         flash("Selecione uma empresa válida.", "warning")
+    active_id = session.get('active_representative_id')
+    if not active_id:
+         flash("Selecione um representante.", "warning")
          return redirect(url_for('menu'))
 
-    data = fetch_commercial_data(user_company.cod_cliente)
+    data = fetch_commercial_data(active_id)
     
     # Process for Unique Pedidos
     orders_list = []
@@ -419,14 +432,12 @@ def pedidos():
 @app.route('/pedidos/<id>')
 @login_required
 def pedido_detail(id):
-    active_id = session.get('active_company_id')
-    user_company = Company.query.get(active_id) if active_id else None
-
-    if not user_company or user_company not in current_user.companies:
+    active_id = session.get('active_representative_id')
+    if not active_id:
          return redirect(url_for('menu'))
          
     # Fetch specific
-    data = fetch_commercial_data(user_company.cod_cliente, pedido=id)
+    data = fetch_commercial_data(active_id, pedido=id)
     if data is None:
         data = [{'D2_PEDIDO': id, 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'StatusPedido': 'Faturado', 'NUM_NOTA': '000101', 'A1_NOME': 'Cliente Teste', 'A3_NOME': 'Vendedor Teste', 'F2_CHVNFE': '352511...0001'}]
 
@@ -484,14 +495,12 @@ def download_nfe(nfe_key):
 @app.route('/insights')
 @login_required
 def insights():
-    active_id = session.get('active_company_id')
-    user_company = Company.query.get(active_id) if active_id else None
-
-    if not user_company or user_company not in current_user.companies:
-         flash("Selecione uma empresa válida.", "warning")
+    active_id = session.get('active_representative_id')
+    if not active_id:
+         flash("Selecione um representante.", "warning")
          return redirect(url_for('menu'))
 
-    data = fetch_commercial_data(user_company.cod_cliente)
+    data = fetch_commercial_data(active_id)
     
     # Process data for chart: Total Sales by Month/Year
     # Data structure expected: 'F2_EMISSAO': 'YYYYMMDD', 'F2_VALBRUT': float
@@ -564,19 +573,12 @@ def chat_send():
     
     try:
         # Get active company to find the client name
-        active_id = session.get('active_company_id')
-        user_company = Company.query.get(active_id) if active_id else None
+        active_id = session.get('active_representative_id')
         
-        client_name = "Desconhecido"
-        if user_company:
-             # Try to fetch from SQL Server
-            name_from_db = get_customer_name(user_company.cod_cliente)
-            if name_from_db:
-                client_name = name_from_db
-            else:
-                 # Fallback or maybe the company name itself if not found in ERP?
-                 # Ignoring company.name validation against ERP for now.
-                 pass
+        client_name = "Gestor"
+        if active_id:
+             # For the chat, we can say "Gestor visualizando Rep X" or just "Gestor"
+             pass
 
         # Payload for n8n Webhook
         payload = {
