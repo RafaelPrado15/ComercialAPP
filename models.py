@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, index=True)
+    full_name = db.Column(db.String(128))
     password_hash = db.Column(db.String(128))
     
     # Relationship to companies

@@ -37,6 +37,7 @@ def get_all_representatives():
         SELECT A3_COD, A3_NOME FROM SA3010 
         WHERE D_E_L_E_T_ <> '*' 
           AND A3_MSBLQL <> '1'
+          AND A3_COD < '999990'
         ORDER BY A3_NOME
         """
         cursor.execute(query)
@@ -143,7 +144,7 @@ def rastreio():
          return redirect(url_for('menu'))
     
     # Date Filtering
-    # Default to last 2 months if not provided
+    # Default to last 30 days if not provided
     today = datetime.now()
     default_start = (today - timedelta(days=60)).strftime('%Y-%m-%d')
     default_end = today.strftime('%Y-%m-%d')
@@ -382,9 +383,9 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
         print(f"Error fetching commercial data: {e}")
         return None
 
-@app.route('/pedidos')
+@app.route('/notas_fiscais')
 @login_required
-def pedidos():
+def notas_fiscais():
     active_id = session.get('active_representative_id')
     if not active_id:
          flash("Selecione um representante.", "warning")
@@ -427,11 +428,11 @@ def pedidos():
     end = start + per_page
     paginated_orders = orders_list[start:end]
 
-    return render_template('pedidos.html', orders=paginated_orders, page=page, total_pages=total_pages, search=search)
+    return render_template('notas_fiscais.html', orders=paginated_orders, page=page, total_pages=total_pages, search=search)
 
-@app.route('/pedidos/<id>')
+@app.route('/notas_fiscais/<id>')
 @login_required
-def pedido_detail(id):
+def nota_fiscal_detail(id):
     active_id = session.get('active_representative_id')
     if not active_id:
          return redirect(url_for('menu'))
@@ -441,9 +442,9 @@ def pedido_detail(id):
     if data is None:
         data = [{'D2_PEDIDO': id, 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'StatusPedido': 'Faturado', 'NUM_NOTA': '000101', 'A1_NOME': 'Cliente Teste', 'A3_NOME': 'Vendedor Teste', 'F2_CHVNFE': '352511...0001'}]
 
-    return render_template('pedido_detail.html', pedido=data[0] if data else None, items=data) 
+    return render_template('nota_fiscal_detail.html', pedido=data[0] if data else None, items=data)
 
-@app.route('/pedidos/download_nfe/<path:nfe_key>')
+@app.route('/notas_fiscais/download_nfe/<path:nfe_key>')
 @login_required
 def download_nfe(nfe_key):
     """
@@ -459,7 +460,7 @@ def download_nfe(nfe_key):
         
         if resp.status_code != 200:
             flash(f"Erro ao consultar DANFE: Status {resp.status_code}", "danger")
-            return redirect(request.referrer or url_for('pedidos'))
+            return redirect(request.referrer or url_for('notas_fiscais'))
             
         data = resp.json()
         
@@ -468,7 +469,7 @@ def download_nfe(nfe_key):
         
         if not pdf_url:
              flash("URL do PDF não encontrada na resposta do servidor.", "warning")
-             return redirect(request.referrer or url_for('pedidos'))
+             return redirect(request.referrer or url_for('notas_fiscais'))
              
         # 2. Download the PDF
         # The URL in JSON might be http usually.
@@ -484,12 +485,12 @@ def download_nfe(nfe_key):
             )
         else:
              flash(f"Erro ao baixar arquivo PDF: Status {pdf_resp.status_code}", "danger")
-             return redirect(request.referrer or url_for('pedidos'))
+             return redirect(request.referrer or url_for('notas_fiscais'))
 
     except Exception as e:
         print(f"Exception in download_nfe: {e}")
         flash("Erro interno ao tentar baixar a nota.", "danger")
-        return redirect(request.referrer or url_for('pedidos')) 
+        return redirect(request.referrer or url_for('notas_fiscais')) 
 
 
 @app.route('/insights')

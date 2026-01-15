@@ -6,30 +6,31 @@ def create_admin_user():
     with app.app_context():
         db.create_all()
         
-        # Check if user exists
-        if User.query.filter_by(username='admin').first():
-            print("User 'admin' already exists.")
-            return
+        # Migração manual simples: Adicionar coluna full_name se não existir
+        try:
+            db.session.execute(db.text('ALTER TABLE users ADD COLUMN full_name TEXT'))
+            db.session.commit()
+            print("Column 'full_name' added to 'users' table.")
+        except Exception:
+            # Column already exists or other error we can ignore for now
+            db.session.rollback()
 
-        # Create Company
-        # Using a dummy code linked to the SQL Server logic
-        # You can change '000189' to a valid client code if you have one
-        company = Company(name='Empresa Exemplo', cod_cliente='000189')
-        db.session.add(company)
-        db.session.commit()
+        # Check if user exists
+        username = '2371'
+        full_name = 'Jonathan'
+        user = User.query.filter_by(username=username).first()
         
-        # Create User
-        user = User(username='admin')
-        user.set_password('admin123')
-        db.session.add(user)
-        db.session.commit()
-        
-        # Link
-        link = UserCompany(user_id=user.id, company_id=company.id)
-        db.session.add(link)
-        db.session.commit()
-        
-        print("User 'admin' created with password 'admin123' and linked to 'Empresa Exemplo'.")
+        if user:
+            user.full_name = full_name
+            db.session.commit()
+            print(f"User '{username}' updated with full name '{full_name}'.")
+        else:
+            # Create User
+            user = User(username=username, full_name=full_name)
+            user.set_password('23712371')
+            db.session.add(user)
+            db.session.commit()
+            print(f"User '{username}' created with full name '{full_name}'.")
 
 if __name__ == '__main__':
     create_admin_user()

@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Detalhes do Pedido - Pradolux{% endblock %}
+{% block title %}Detalhes da Nota Fiscal - Pradolux{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h2>Detalhes do Pedido #{{ pedido.D2_PEDIDO }}</h2>
+        <h2>Detalhes da Nota Fiscal #{{ pedido.D2_PEDIDO }}</h2>
     </div>
     <div class="col-auto">
-        <a href="{{ url_for('pedidos') }}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{{ url_for('notas_fiscais') }}" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>
 
