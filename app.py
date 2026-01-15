@@ -2,7 +2,8 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import requests
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import calendar
 from config import Config
 from database import db, get_sql_server_connection
 from models import User, Company, UserCompany
@@ -18,6 +19,36 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+    
+@app.template_filter('format_date_br')
+def format_date_br(value):
+    if not value:
+        return ""
+    val_str = str(value).strip()
+    # Handle YYYYMMDD
+    if len(val_str) == 8 and val_str.isdigit():
+        return f"{val_str[6:8]}/{val_str[4:6]}/{val_str[0:4]}"
+    # Handle YYYY-MM-DD
+    try:
+        if '-' in val_str:
+            dt = datetime.strptime(val_str[:10], '%Y-%m-%d')
+            return dt.strftime('%d/%m/%Y')
+    except:
+        pass
+    return value
+
+@app.template_filter('format_currency_br')
+def format_currency_br(value):
+    if value is None:
+        return "R$ 0,00"
+    try:
+        val_float = float(value)
+        # Formata com separador de milhar e 2 casas decimais
+        formatted = f"{val_float:,.2f}"
+        # Troca , por X, . por , e X por . para o padrão BR
+        return f"R$ {formatted.replace(',', 'X').replace('.', ',').replace('X', '.')}"
+    except:
+        return value
 
 # Create tables on startup (for dev simplicity)
 with app.app_context():
@@ -301,7 +332,7 @@ def get_customer_name(cod_cliente):
         print(f"Error fetching customer name: {e}")
         return None
 
-def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
+def fetch_commercial_data(cod_cliente, pedido=None, nota=None, data_inicio=None, data_fim=None):
     """
     Helper to fetch commercial data using the provided complex query.
     """
@@ -315,6 +346,7 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
         query = """
         SELECT
             F2_DOC AS NUM_NOTA,
+            SF2.F2_SERIE,
             F2_VEND1,
             A3_NOME,
             F2_EMISSAO,
@@ -322,6 +354,12 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
             A1_NOME,
             F2_VALBRUT,
             SD2APP.D2_PEDIDO,
+            SD2APP.D2_ITEM,
+            SD2APP.D2_COD,
+            SD2APP.D2_DESC,
+            SD2APP.D2_QUANT,
+            SD2APP.D2_PRCVEN,
+            SD2APP.D2_TOTAL,
             INFO_PED.StatusPedido,
             F2_CHVNFE
         FROM SF2010 AS SF2 WITH(NOLOCK)
@@ -333,21 +371,12 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
             ON SA1.A1_COD = SF2.F2_CLIENTE
             AND SA1.D_E_L_E_T_ = ''
             AND SA1.A1_MSBLQL <> '1'
-        INNER JOIN (
-            SELECT
-            DISTINCT(D2_PEDIDO) AS D2_PEDIDO,
-            D2_DOC,
-            D2_LOJA,
-            D2_SERIE,
-            D2_CLIENTE
-            FROM SD2010 AS SD2 WITH(NOLOCK)
-            WHERE SD2.D_E_L_E_T_ = ''
-            AND SD2.D2_PEDIDO <> ''
-            ) AS SD2APP
+        INNER JOIN SD2010 AS SD2APP WITH(NOLOCK)
             ON SD2APP.D2_DOC =  SF2.F2_DOC
             AND SD2APP.D2_SERIE = SF2.F2_SERIE
             AND SD2APP.D2_LOJA = SF2.F2_LOJA
             AND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE
+            AND SD2APP.D_E_L_E_T_ = ''
         LEFT JOIN N8N_InformacoesPedidos() AS INFO_PED
             ON INFO_PED.NumeroPedido = SD2APP.D2_PEDIDO
             AND INFO_PED.Vendedor = SF2.F2_VEND1
@@ -356,17 +385,18 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None):
             AND (? = '' OR SD2APP.D2_PEDIDO = ?) 
             AND (? = '' OR SF2.F2_DOC = ?) 
             AND (? = '' OR SF2.F2_CLIENTE = ?) 
-            AND SF2.F2_EMISSAO >= ? 
-        ORDER BY SF2.F2_EMISSAO DESC
+            AND SF2.F2_EMISSAO BETWEEN ? AND ?
+        ORDER BY SF2.F2_EMISSAO DESC, SD2APP.D2_ITEM ASC
         """
         
         cod_repres = cod_cliente # In this function, cod_cliente parameter is being reused for Vendedor
         p_pedido = pedido if pedido else ''
         p_nota = nota if nota else ''
         p_cliente = '' # Removing client filter to see all from rep
-        data_minima = '20240101'
+        data_de = data_inicio if data_inicio else '20240101'
+        data_ate = data_fim if data_fim else '20991231'
         
-        params = (cod_repres, p_pedido, p_pedido, p_nota, p_nota, p_cliente, p_cliente, data_minima)
+        params = (cod_repres, p_pedido, p_pedido, p_nota, p_nota, p_cliente, p_cliente, data_de, data_ate)
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -390,8 +420,28 @@ def notas_fiscais():
     if not active_id:
          flash("Selecione um representante.", "warning")
          return redirect(url_for('menu'))
+    # Get month/year from request or default to current
+    selected_month_str = request.args.get('month') # Format YYYY-MM
+    if not selected_month_str:
+        today = date.today()
+        selected_month_str = today.strftime('%Y-%m')
+    
+    try:
+        y_str, m_str = selected_month_str.split('-')
+        year = int(y_str)
+        month = int(m_str)
+    except:
+        today = date.today()
+        year = today.year
+        month = today.month
+        selected_month_str = today.strftime('%Y-%m')
 
-    data = fetch_commercial_data(active_id)
+    # Calculate first and last day of selected month
+    first_day = f"{year}{month:02d}01"
+    last_day_val = calendar.monthrange(year, month)[1]
+    last_day = f"{year}{month:02d}{last_day_val}"
+
+    data = fetch_commercial_data(active_id, data_inicio=first_day, data_fim=last_day)
     
     # Process for Unique Pedidos
     orders_list = []
@@ -428,7 +478,12 @@ def notas_fiscais():
     end = start + per_page
     paginated_orders = orders_list[start:end]
 
-    return render_template('notas_fiscais.html', orders=paginated_orders, page=page, total_pages=total_pages, search=search)
+    return render_template('notas_fiscais.html', 
+                           orders=paginated_orders, 
+                           page=page, 
+                           total_pages=total_pages, 
+                           search=search,
+                           selected_month=selected_month_str)
 
 @app.route('/notas_fiscais/<id>')
 @login_required
@@ -437,7 +492,7 @@ def nota_fiscal_detail(id):
     if not active_id:
          return redirect(url_for('menu'))
          
-    # Fetch specific
+    # Fetch specific (no date filter for direct detail link)
     data = fetch_commercial_data(active_id, pedido=id)
     if data is None:
         data = [{'D2_PEDIDO': id, 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'StatusPedido': 'Faturado', 'NUM_NOTA': '000101', 'A1_NOME': 'Cliente Teste', 'A3_NOME': 'Vendedor Teste', 'F2_CHVNFE': '352511...0001'}]

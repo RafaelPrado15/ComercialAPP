@@ -20,8 +20,8 @@
             <div class="col-md-4"><strong>Vendedor:</strong> {{ pedido.A3_NOME }}</div>
             <div class="col-md-4"><strong>Status:</strong> {{ pedido.StatusPedido }}</div>
             <div class="col-md-4 mt-2"><strong>Nota Fiscal:</strong> {{ pedido.NUM_NOTA }}</div>
-            <div class="col-md-4 mt-2"><strong>Emissão:</strong> {{ pedido.F2_EMISSAO }}</div>
-            <div class="col-md-4 mt-2"><strong>Valor Bruto:</strong> R$ {{ pedido.F2_VALBRUT }}</div>
+            <div class="col-md-4 mt-2"><strong>Emissão:</strong> {{ pedido.F2_EMISSAO|format_date_br }}</div>
+            <div class="col-md-4 mt-2"><strong>Valor Bruto:</strong> {{ pedido.F2_VALBRUT|format_currency_br }}</div>
             <div class="col-md-4 mt-2"><strong>Chave de Acesso:</strong> {{ pedido.F2_CHVNFE }}</div>
             <div class="col-md-4 mt-2">
                 <strong>Consulta NFe:</strong>
@@ -38,16 +38,46 @@
     </div>
 </div>
 
-<!-- If we have line items, display them here. 
-     The query is at Header/Nota level mostly (F2_), but SD2APP is joined.
-     If the query returns multiple rows because of multiple items in SD2010, we'd list them.
-     But the query does DISTINCT(D2_PEDIDO) in the subquery SD2APP?
-     Wait, the subquery SELECT DISTINCT(D2_PEDIDO)... might mean we lost item level detail if not careful.
-     Actually, SD2APP.D2_PEDIDO is distinct per order? 
-     "SELECT DISTINCT(D2_PEDIDO) ... FROM SD2010"
-     If SD2010 is items, selecting distinct pedido collapses items.
-     So the provided query essentially retrieves ORDER HEADERS (via Nota Fiscal F2).
-     So we might NOT have item details in this result set.
-     I will show what is available.
--->
+<!-- Items Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light fw-bold">Produtos da Nota Fiscal</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Item</th>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th class="text-center">Quantidade</th>
+                    <th class="text-end">Preço Unit.</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if items %}
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.D2_ITEM }}</td>
+                    <td class="fw-bold">{{ item.D2_COD }}</td>
+                    <td>{{ item.D2_DESC }}</td>
+                    <td class="text-center">{{ item.D2_QUANT }}</td>
+                    <td class="text-end">{{ item.D2_PRCVEN|format_currency_br }}</td>
+                    <td class="text-end fw-bold">{{ item.D2_TOTAL|format_currency_br }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">Nenhum item encontrado.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="5" class="text-end">Total da Nota:</td>
+                    <td class="text-end">{{ pedido.F2_VALBRUT|format_currency_br }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
 {% endblock %}
