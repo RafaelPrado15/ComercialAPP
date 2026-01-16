@@ -55,7 +55,7 @@
                     <td>{{ order['NUM_NOTA'] if order['NUM_NOTA'] else '-' }}</td>
                     <td>{{ order['F2_VALBRUT']|format_currency_br }}</td>
                     <td>
-                        <a href="{{ url_for('nota_fiscal_detail', id=order['D2_PEDIDO']) }}"
+                        <a href="{{ url_for('nota_fiscal_detail', id=order['UNIQUE_ID']) }}"
                             class="btn btn-sm btn-outline-primary">
                             Detalhes
                         </a>

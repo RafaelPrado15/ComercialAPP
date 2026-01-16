@@ -246,10 +246,9 @@ def rastreio():
             AND SC5.D_E_L_E_T_ = ''
             AND SC5.C5_EVENTO IN ('1', '2', '5', '6', '7', '9')
             AND SC5.C5_VEND1 = ?
-            AND SC5.C5_EMISSAO BETWEEN ? AND ?
             """
             
-            params = [active_rep_id, site_start, site_end]
+            params = [active_rep_id]
             
             if order_number:
                 query += " AND SC5.C5_NUM LIKE ? "
@@ -280,7 +279,11 @@ def rastreio():
                 elif 'Pedido Em Conferência' in evento_fmt:
                     kanban_data['Conferência'].append(row)
                 elif 'Pedido Em Faturamento' in evento_fmt:
-                    kanban_data['Faturado'].append(row)
+                    # Filter 'Faturado' to only last 30 days
+                    limit_date = (datetime.now() - timedelta(days=30)).strftime('%Y%m%d')
+                    emissao = row.get('Emissao', '')
+                    if emissao >= limit_date:
+                        kanban_data['Faturado'].append(row)
                 else:
                     # Fallback
                     kanban_data.setdefault('Comercial', []).append(row)
@@ -372,10 +375,9 @@ def fetch_commercial_data(cod_cliente, pedido=None, nota=None, data_inicio=None,
             AND SA1.D_E_L_E_T_ = ''
             AND SA1.A1_MSBLQL <> '1'
         INNER JOIN SD2010 AS SD2APP WITH(NOLOCK)
-            ON SD2APP.D2_DOC =  SF2.F2_DOC
+            ON SD2APP.D2_FILIAL = SF2.F2_FILIAL
+            AND SD2APP.D2_DOC =  SF2.F2_DOC
             AND SD2APP.D2_SERIE = SF2.F2_SERIE
-            AND SD2APP.D2_LOJA = SF2.F2_LOJA
-            AND SD2APP.D2_CLIENTE = SF2.F2_CLIENTE
             AND SD2APP.D_E_L_E_T_ = ''
         LEFT JOIN N8N_InformacoesPedidos() AS INFO_PED
             ON INFO_PED.NumeroPedido = SD2APP.D2_PEDIDO
@@ -443,14 +445,17 @@ def notas_fiscais():
 
     data = fetch_commercial_data(active_id, data_inicio=first_day, data_fim=last_day)
     
-    # Process for Unique Pedidos
+    # Process for Unique Notas Fiscais (Doc + Serie)
     orders_list = []
     if data:
         seen = set()
         for row in data:
-            pid = row['D2_PEDIDO']
-            if pid not in seen:
-                seen.add(pid)
+            # Unique identifier is Doc + Serie
+            invoice_key = f"{row['NUM_NOTA']}_{row['F2_SERIE']}"
+            if invoice_key not in seen:
+                seen.add(invoice_key)
+                # Combine id for link
+                row['UNIQUE_ID'] = invoice_key
                 orders_list.append(row)
     
     # Mock data fallback
@@ -492,8 +497,22 @@ def nota_fiscal_detail(id):
     if not active_id:
          return redirect(url_for('menu'))
          
-    # Fetch specific (no date filter for direct detail link)
-    data = fetch_commercial_data(active_id, pedido=id)
+    # ID is now Doc_Serie
+    doc_id = ""
+    serie_id = ""
+    if '_' in id:
+        doc_id, serie_id = id.split('_')
+    else:
+        # Fallback for old links or unexpected format
+        doc_id = id
+
+    # Fetch specific (using Nota and optionally Serie if available)
+    data = fetch_commercial_data(active_id, nota=doc_id)
+    
+    # If we have a serie, filter items strictly for that note
+    if serie_id and data:
+        data = [item for item in data if item.get('F2_SERIE', '').strip() == serie_id.strip()]
+
     if data is None:
         data = [{'D2_PEDIDO': id, 'F2_EMISSAO': '20251101', 'F2_VALBRUT': 1500.00, 'StatusPedido': 'Faturado', 'NUM_NOTA': '000101', 'A1_NOME': 'Cliente Teste', 'A3_NOME': 'Vendedor Teste', 'F2_CHVNFE': '352511...0001'}]
 
