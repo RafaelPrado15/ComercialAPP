@@ -209,6 +209,7 @@ def rastreio():
         'Produção': [],
         'Separação': [],
         'Conferência': [],
+        'Em Faturamento': [],
         'Faturado': []
     }
 
@@ -219,7 +220,9 @@ def rastreio():
             
             # Base Query
             query = """
-            SELECT 
+            DECLARE @data DATE;
+            SET @data = GETDATE();
+            (SELECT 
                 SC5.C5_NUM AS NumeroPedido,
                 SC5.C5_VEND1 AS CodRepresentante,
                 SC5.C5_CLIENTE AS CodCliente, 
@@ -227,6 +230,7 @@ def rastreio():
                 SC5.C5_EMISSAO AS Emissao,
                 SC5.C5_FECENT AS PrevisaoFaturamento,
                 SC5.C5_XPEDAGE AS Agendado,
+                SUM(SC6.C6_VALOR) AS Valor,
                 SC5.C5_EVENTO AS Evento,
                 CASE 
                     WHEN SC5.C5_EVENTO IN ('1', '2') THEN 'Pedido No Comercial'
@@ -235,8 +239,11 @@ def rastreio():
                     WHEN SC5.C5_EVENTO IN ('6') THEN 'Pedido Em Conferência'
                     WHEN SC5.C5_EVENTO IN ('7') THEN 'Pedido Em Faturamento'
                     ELSE '' 
-                END AS EventoFormatado
+                END AS EventoFormatado,
+                CONCAT(RTRIM(LTRIM(SA1.A1_MUN)), '-', RTRIM(LTRIM(SA1.A1_EST))) AS Cidade,
+                CASE WHEN SC5.C5_OPER = '01' THEN 'Venda' ELSE 'Outro' END AS Operacao
             FROM SC5010 SC5 WITH(NOLOCK) 
+            INNER JOIN SC6010 SC6 WITH(NOLOCK) ON SC5.C5_FILIAL = SC6.C6_FILIAL AND SC5.C5_NUM = SC6.C6_NUM AND SC6.D_E_L_E_T_ = ''
             INNER JOIN SA1010 SA1 WITH(NOLOCK) 
                 ON SA1.A1_FILIAL = '' 
                 AND SA1.A1_COD = SC5.C5_CLIENTE 
@@ -254,7 +261,48 @@ def rastreio():
                 query += " AND SC5.C5_NUM LIKE ? "
                 params.append(f"%{order_number}%")
             
-            query += " ORDER BY SC5.C5_EMISSAO DESC"
+            query += """
+            GROUP BY SC5.C5_NUM, SC5.C5_VEND1, SC5.C5_CLIENTE, RTRIM(LTRIM(SA1.A1_NOME)), SC5.C5_EMISSAO,
+                SC5.C5_FECENT, SC5.C5_XPEDAGE, SC5.C5_EVENTO, SA1.A1_MUN, SA1.A1_EST, SC5.C5_SEPARA, SC5.C5_OPER
+            )
+            UNION
+            (SELECT 
+                SF2.F2_DOC AS NumeroPedido,
+                SF2.F2_VEND1 AS CodRepresentante,
+                SF2.F2_CLIENTE AS CodCliente,
+                RTRIM(LTRIM(SA1.A1_NOME)) AS Cliente, 
+                SF2.F2_EMISSAO AS Emissao,
+                SF2.F2_EMISSAO AS PrevisaoFaturamento,
+                '' AS Agendado,
+                ISNULL(SUM(ROUND((SF2.F2_VALMERC),2)), 0) AS Valor,
+                8 AS Evento,
+                'Faturado' AS EventoFormatado,
+                CONCAT(RTRIM(LTRIM(SA1.A1_MUN)), '-', RTRIM(LTRIM(SA1.A1_EST))) AS Cidade,
+                'Venda' AS Operacao
+            FROM SF2010 AS SF2 WITH (NOLOCK) 
+            INNER JOIN SA1010 SA1 WITH(NOLOCK) ON SA1.A1_FILIAL = '' AND SF2.F2_CLIENTE = SA1.A1_COD AND SF2.F2_LOJA = SA1.A1_LOJA AND SA1.D_E_L_E_T_ = ''
+            WHERE SF2.D_E_L_E_T_ <> '*' 
+            AND SF2.F2_FILIAL IN ('0101')
+            AND SF2.F2_CLIENTE != '003718' 
+            AND SF2.F2_EMISSAO >= '20140101'
+            AND SF2.F2_VEND1 < '999990'
+            AND SF2.F2_VEND1 <> ''
+            AND ((SELECT COUNT(E1_PARCELA) FROM SE1010 WITH(NOLOCK) WHERE E1_NUM = SF2.F2_DOC AND E1_FILIAL = SF2.F2_FILIAL) > 0)
+            AND SF2.F2_SERIE IN ('1', '2')
+            AND SF2.F2_VEND1 = ?
+            AND SF2.F2_EMISSAO >= CONVERT(VARCHAR(10),DATEADD(DAY, -30, @data),112)
+            """
+            params.append(active_rep_id)
+
+            if order_number:
+                query += " AND SF2.F2_DOC LIKE ? "
+                params.append(f"%{order_number}%")
+
+            query += """
+            GROUP BY SF2.F2_VEND1, SF2.F2_EMISSAO, SF2.F2_DOC, SA1.A1_NOME, SA1.A1_MUN, SA1.A1_EST, SF2.F2_CLIENTE
+            )
+            ORDER BY Emissao DESC
+            """
             
             cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
@@ -279,14 +327,12 @@ def rastreio():
                 elif 'Pedido Em Conferência' in evento_fmt:
                     kanban_data['Conferência'].append(row)
                 elif 'Pedido Em Faturamento' in evento_fmt:
-                    # Filter 'Faturado' to only last 30 days
-                    limit_date = (datetime.now() - timedelta(days=30)).strftime('%Y%m%d')
-                    emissao = row.get('Emissao', '')
-                    if emissao >= limit_date:
-                        kanban_data['Faturado'].append(row)
+                    kanban_data['Em Faturamento'].append(row)
+                elif 'Faturado' in evento_fmt:
+                    kanban_data['Faturado'].append(row)
                 else:
                     # Fallback
-                    kanban_data.setdefault('Comercial', []).append(row)
+                    kanban_data['Comercial'].append(row)
 
         except Exception as e:
             flash(f"Erro ao buscar dados: {e}", "danger")

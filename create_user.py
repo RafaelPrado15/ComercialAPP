@@ -16,8 +16,8 @@ def create_admin_user():
             db.session.rollback()
 
         # Check if user exists
-        username = '2371'
-        full_name = 'Jonathan'
+        username = 'weverton'
+        full_name = 'Weverton Luis'
         user = User.query.filter_by(username=username).first()
         
         if user:
@@ -27,7 +27,7 @@ def create_admin_user():
         else:
             # Create User
             user = User(username=username, full_name=full_name)
-            user.set_password('23712371')
+            user.set_password('17231723')
             db.session.add(user)
             db.session.commit()
             print(f"User '{username}' created with full name '{full_name}'.")

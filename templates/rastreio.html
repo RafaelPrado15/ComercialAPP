@@ -2,6 +2,8 @@
 
 {% block title %}Pedidos - Pradolux{% endblock %}
 
+{% block container_class %}container-fluid px-2 px-md-4{% endblock %}
+
 {% block content %}
 
 <div class="row mb-4">
@@ -41,7 +43,11 @@
     /* Kanban Flow / Evolution Styles */
     .kanban-col {
         position: relative;
-        padding-right: 15px;
+        padding-right: 10px;
+        padding-left: 10px;
+        flex: 0 0 300px;
+        /* Fixed width for columns */
+        max-width: 300px;
     }
 
     .chevron-header {
@@ -57,7 +63,7 @@
         /* Slight roundness */
         box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
         text-transform: uppercase;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         display: flex;
         /* Centering content properly */
         align-items: center;
@@ -70,31 +76,33 @@
         background: #6c757d;
     }
 
-    /* Gray */
+    /* Gray - Comercial */
     .step-2 {
         background: #ffc107;
         color: #212529;
     }
 
-    /* Warning */
+    /* Warning - Produção */
     .step-3 {
         background: #0dcaf0;
     }
 
-    /* Info */
+    /* Info - Separação */
     .step-4 {
         background: #0d6efd;
     }
 
-    /* Primary */
+    /* Primary - Conferência */
     .step-5 {
+        background: #6610f2;
+    }
+
+    /* Indigo - Em Faturamento */
+    .step-6 {
         background: #198754;
     }
 
-    /* Success */
-
-    /* Adjust the shape for the first and last item if needed, 
-       but keeping uniform shape usually looks better for 'continuous flow' */
+    /* Success - Faturado */
 
     .orders-container {
         scrollbar-width: thin;
@@ -106,6 +114,9 @@
         border: none;
         border-left: 4px solid transparent;
         background: white;
+        width: 100%;
+        /* Fill the column */
+        min-height: 110px;
     }
 
     .order-card:hover {
@@ -130,30 +141,52 @@
     }
 
     .order-card.step-5-border {
+        border-left-color: #6610f2;
+    }
+
+    .order-card.step-6-border {
         border-left-color: #198754;
+    }
+
+    .card-text.city-text {
+        font-size: 0.7rem;
+        color: #6c757d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .card-text.value-text {
+        font-weight: 600;
+        color: #212529;
     }
 </style>
 
 <div class="overflow-auto pb-3 orders-container"> <!-- Wrapper for scroll -->
-    <div class="row flex-nowrap g-3" style="min-width: 100%;"> <!-- Row -->
+    <div class="row flex-nowrap g-1" style="min-width: max-content; margin: 0;">
+        <!-- Row with min-width to ensure scrolling -->
 
         <!-- Coluna Comercial (Step 1) -->
-        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+        <div class="col-auto kanban-col">
             <div class="chevron-header step-1">
                 1. Comercial ({{ kanban_data['Comercial']|length }})
             </div>
             <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Comercial'] %}
                 <div class="card mb-3 shadow-sm order-card step-1-border">
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title fw-bold text-secondary mb-0">#{{ item.NumeroPedido }}</h6>
                             <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
                                 }}</small>
                         </div>
-                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
-                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento|format_date_br }}
-                        </p>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <small class="text-muted" style="font-size: 0.7rem;">Prev: {{
+                                item.PrevisaoFaturamento|format_date_br }}</small>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -161,23 +194,27 @@
         </div>
 
         <!-- Coluna Produção (Step 2) -->
-        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+        <div class="col-auto kanban-col">
             <div class="chevron-header step-2">
                 2. Produção ({{ kanban_data['Produção']|length }})
             </div>
             <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Produção'] %}
                 <div class="card mb-3 shadow-sm order-card step-2-border">
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="card-title fw-bold text-warning mb-0" style="filter: brightness(0.85);">
-                                #{{ item.NumeroPedido }}</h6>
+                            <h6 class="card-title fw-bold text-warning mb-0" style="filter: brightness(0.85);">#{{
+                                item.NumeroPedido }}</h6>
                             <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
                                 }}</small>
                         </div>
-                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
-                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento|format_date_br }}
-                        </p>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <small class="text-muted" style="font-size: 0.7rem;">Prev: {{
+                                item.PrevisaoFaturamento|format_date_br }}</small>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -185,23 +222,27 @@
         </div>
 
         <!-- Coluna Separação (Step 3) -->
-        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+        <div class="col-auto kanban-col">
             <div class="chevron-header step-3">
                 3. Separação ({{ kanban_data['Separação']|length }})
             </div>
             <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Separação'] %}
                 <div class="card mb-3 shadow-sm order-card step-3-border">
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title fw-bold text-info mb-0" style="filter: brightness(0.85);">#{{
                                 item.NumeroPedido }}</h6>
                             <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
                                 }}</small>
                         </div>
-                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
-                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento|format_date_br }}
-                        </p>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <small class="text-muted" style="font-size: 0.7rem;">Prev: {{
+                                item.PrevisaoFaturamento|format_date_br }}</small>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -209,46 +250,78 @@
         </div>
 
         <!-- Coluna Conferência (Step 4) -->
-        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+        <div class="col-auto kanban-col">
             <div class="chevron-header step-4">
                 4. Conferência ({{ kanban_data['Conferência']|length }})
             </div>
             <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Conferência'] %}
                 <div class="card mb-3 shadow-sm order-card step-4-border">
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title fw-bold text-primary mb-0">#{{ item.NumeroPedido }}</h6>
                             <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
                                 }}</small>
                         </div>
-                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
-                        <p class="card-text small mb-1 text-muted">Prev: {{ item.PrevisaoFaturamento|format_date_br }}
-                        </p>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <small class="text-muted" style="font-size: 0.7rem;">Prev: {{
+                                item.PrevisaoFaturamento|format_date_br }}</small>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Coluna Faturado (Step 5) -->
-        <div class="col-11 col-md-6 col-lg-4 col-xl kanban-col">
+        <!-- Coluna Em Faturamento (Step 5) -->
+        <div class="col-auto kanban-col">
             <div class="chevron-header step-5">
-                5. Faturado ({{ kanban_data['Faturado']|length }})
+                5. Em Faturamento ({{ kanban_data['Em Faturamento']|length }})
+            </div>
+            <div class="overflow-auto" style="max-height: 70vh;">
+                {% for item in kanban_data['Em Faturamento'] %}
+                <div class="card mb-3 shadow-sm order-card step-5-border">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold mb-0" style="color: #6610f2;">#{{ item.NumeroPedido }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
+                                }}</small>
+                        </div>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <small class="text-muted" style="font-size: 0.7rem;">Prev: {{
+                                item.PrevisaoFaturamento|format_date_br }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Coluna Faturado (Step 6) -->
+        <div class="col-auto kanban-col">
+            <div class="chevron-header step-6">
+                6. Faturado ({{ kanban_data['Faturado']|length }})
             </div>
             <div class="overflow-auto" style="max-height: 70vh;">
                 {% for item in kanban_data['Faturado'] %}
-                <div class="card mb-3 shadow-sm order-card step-5-border">
-                    <div class="card-body">
+                <div class="card mb-3 shadow-sm order-card step-6-border">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title fw-bold text-success mb-0">#{{ item.NumeroPedido }}</h6>
                             <small class="text-muted" style="font-size: 0.75rem;">{{ item.Emissao|format_date_br
                                 }}</small>
                         </div>
-                        <p class="card-text small mb-1">{{ item.Cliente }}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <small class="text-muted">Prev: {{ item.PrevisaoFaturamento|format_date_br }}</small>
-                            <span class="badge bg-success rounded-pill px-2">Concluído</span>
+                        <p class="card-text small mb-1 fw-bold text-truncate">{{ item.Cliente }}</p>
+                        <p class="card-text city-text mb-2"><i class="bi bi-geo-alt"></i> {{ item.Cidade }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="card-text small value-text">{{ item.Valor|format_currency_br }}</span>
+                            <span class="badge bg-success rounded-pill px-2" style="font-size: 0.65rem;">Faturado</span>
                         </div>
                     </div>
                 </div>
@@ -258,4 +331,5 @@
 
     </div>
 </div>
+
 {% endblock %}
